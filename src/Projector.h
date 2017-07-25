@@ -31,6 +31,10 @@ public :
     bool isTrsMode; //for gizmo mode
     
     ofVideoPlayer videoPlayer;
+    ofTexture videoTexture;
+    ofImage videoImg;
+    
+    ofMatrix4x4 projectorMatrix;
     
     Projector();
     Projector(float xPos, float yPos, float zPos);
@@ -39,7 +43,6 @@ public :
     void setup();
     void update();
     void draw();
-    
 };
 
 

@@ -2,6 +2,7 @@
 
 #include "ofMain.h"
 #include "ofxGui.h"
+#include "ofxAssimpModelLoader.h"
 #include "Projector.h"
 
 class ofApp : public ofBaseApp{
@@ -25,10 +26,33 @@ class ofApp : public ofBaseApp{
 		
     //Additional variables & functions
     public :
-        ofEasyCam easyCam; // Easy Camera;
+        //Easy Camera
+        ofEasyCam easyCam;
+    
+        //GUI panel variables
         ofxPanel gui;
         ofParameterGroup projectorPanelGroup;
-        vector<Projector*> projectors; //Dynamic array Projector class vector
+    
+        //Dynamic array Projector class vector
+        vector<Projector*> projectors;
+    
+        //Model loader
+        ofxAssimpModelLoader model;
+    
+        //Primitive object (for the video test)
+        ofPlanePrimitive plane;
+        ofBoxPrimitive box;
+        ofBoxPrimitive box2;
+        ofSpherePrimitive ball;
+    
+        //Dynamic array of3dPrimitive vector
+        vector<of3dPrimitive> models;
+    
+        //Dynamic array ofVec3f vector (for the store multiple model attribute)
+        vector<ofVec3f> modelAttributes;
+    
+        //Shader
+        ofShader textureProjectionShader;
     
         void refreshGUI();
         void deleteProjector(int projectorNum);
