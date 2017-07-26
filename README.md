@@ -2,29 +2,27 @@
 
 템플릿 코드
 
-- 테스트
-Mac 64bit debug 모드에서 실행
-실행하면 3차원 그리드내에 3개의 projector 오브젝트와 free camera로 둘러보기가 가능
-2017/07/25
-실행하면 4개의 모델링에 영상이 비춰지며 free camera로 둘러보기가 가능
+<br>Mac 64bit debug 모드에서 실행한다
+<br>실행하면 3차원 그리드내에 3개의 projector 오브젝트와 free camera로 둘러보기가 가능
+<br>실행하면 4개의 모델링에 영상이 비춰지며 free camera로 둘러보기가 가능
+<br>실행하면 불러낸 커스텀 3D모델링에 영상이 비춰지며 free camera로 둘러보기가 가능</br>
 
 - Projector.h, cpp 설명
-Projector 클래스는 프로젝터 기계를 의미
-XYZ좌표이동과 XYZ축회전 가능
-실제 프로젝터의 스펙을 멤버변수로 이용할 예정
-각 프로젝터마다 개별적으로 사용할 영상을 지정할 예정
+<br>Projector 클래스는 프로젝터 기계를 의미
+<br>XYZ좌표이동과 XYZ축회전 가능
+<br>실제 프로젝터의 스펙을 멤버변수로 이용할 예정
+<br>각 프로젝터마다 개별적으로 사용할 영상을 지정할 예정</br>
 
 - 현 구현상황
-기본 제공된 ofEasyCam으로 free camera 구현
-projector 오브젝트는 마우스로 선택이 가능. 선택된 프로젝터의 숫자가 좌측상단에 표시
-선택된 projector가 있는 경우 d버튼을 통해 삭제가 가능
-- 2017/07/25
-테스트 방법
-OpenGL과 GLSL을 이용하여 쉐이더를 통한 Projection Texturing 테스트
-테스트용도로 이용할 영상파일을 ($프로젝트)/bin/data 경로에 넣은후
-Projector.cpp에서 void Projector::setup() 함수에서 주석처리된
-videoPlayer.load("*.*"); 코드에서 *.* 를 테스트할 영상파일로 고쳐주고 컴파일(Release 모드로 할것)
-평면(Plane)과 상자(Box) 2개 그리고 구체(Sphere)에 영상이 비춰지는것을 확인할 수 있다.
+<br>기본 제공된 ofEasyCam으로 free camera 구현
+<br>projector 오브젝트는 마우스로 선택이 가능. 선택된 프로젝터의 숫자가 좌측상단에 표시</br>
+
+- 테스트 방법
+<br>OpenGL과 GLSL을 이용하여 쉐이더를 통한 Projection Texturing 테스트
+<br>테스트용도로 이용할 영상파일을 ($프로젝트)/bin/data 경로에 넣은후
+<br>Projector.cpp에서 void Projector::setup() 함수에서 주석처리된
+<br>videoPlayer.load("*.*"); 코드에서 *.* 를 테스트할 영상파일로 고쳐주고 컴파일(Release 모드로 할것)
+<br>불러낸 상자모양 모델링에 영상이 비춰지는것을 확인할 수 있다.</br>
 
 
 - TODO
