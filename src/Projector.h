@@ -10,6 +10,7 @@
 #define Projector_h
 
 #include "ofMain.h"
+#include "ofxOpenCv.h"
 
 class Projector {
 public :
@@ -33,6 +34,7 @@ public :
     ofVideoPlayer videoPlayer;
     ofTexture videoTexture;
     ofImage videoImg;
+    ofxCvColorImage colorImg;
     
     ofMatrix4x4 projectorMatrix;
     

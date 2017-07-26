@@ -38,6 +38,7 @@ class ofApp : public ofBaseApp{
     
         //Model loader
         ofxAssimpModelLoader model;
+        ofVboMesh mesh;
     
         //Primitive object (for the video test)
         ofPlanePrimitive plane;

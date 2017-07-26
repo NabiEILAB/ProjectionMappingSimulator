@@ -14,14 +14,27 @@ void ofApp::setup(){
         projectors[i]->setup();
     
     //Load model test
-    /*model.loadModel("CardBoardBox.3ds",false);
+    model.loadModel("CardBoardBox.3ds");
     model.setPosition(0, 100, 0);
     model.setScale(1, 1, 1);
     model.setRotation(0, 180, 1, 0, 0);
-    model.setRotation(1, 45, 0, 1, 0);*/
+    model.setRotation(1, 45, 0, 1, 0);
     
-    //Draw video test
-    plane.set(640,480);
+    ofMatrix4x4 modelMatrix = model.getModelMatrix();
+    ofMatrix4x4 meshMatrix = model.getMeshHelper(0).matrix;
+    ofMatrix4x4 concatMatrix;
+    concatMatrix.preMult(modelMatrix);
+    concatMatrix.preMult(meshMatrix);
+    
+    mesh = model.getMesh(0);
+    
+    for(int i=0; i<mesh.getNumVertices(); i++) {
+        ofVec3f& vert = mesh.getVertices()[i];
+        vert.set(concatMatrix.preMult(vert));
+    }
+    
+    //Draw video on primitive object test
+    /*plane.set(640,480);
     plane.setPosition(0,0,0);
     box.set(350,185,20);
     box.setPosition(-150,20,150);
@@ -38,7 +51,7 @@ void ofApp::setup(){
     modelAttributes.push_back(ofVec3f(0,0,0));
     modelAttributes.push_back(ofVec3f(-150,20,150));
     modelAttributes.push_back(ofVec3f(120,15,50));
-    modelAttributes.push_back(ofVec3f(150,100,150));
+    modelAttributes.push_back(ofVec3f(150,100,150));*/
     
     //load texture shader
     textureProjectionShader.load("TextureProjection");
@@ -59,14 +72,19 @@ void ofApp::draw(){
     
     easyCam.begin();
     
-    //ofDrawGrid(100.f);
-    
     textureProjectionShader.begin();
     string text = "Current selected Projector : ";
     for(int i=0; i<projectors.size(); i++) {
         projectors[i]->draw();
+        //test case : draw on custom model
+        ofMatrix4x4 modelMatrix = ofMatrix4x4::newIdentityMatrix();
+        textureProjectionShader.setUniformMatrix4f("modelMatrix", modelMatrix);
+        textureProjectionShader.setUniformMatrix4f("projectorMatrix", projectors[i]->projectorMatrix);
+        textureProjectionShader.setUniformTexture("projectorTex", projectors[i]->videoTexture, 0);
+        mesh.draw();
+        
         //test case : one model in 0,0,0 - no need to translate modelMatrix
-        for(int j=0; j<modelAttributes.size(); j++) {
+        /*for(int j=0; j<modelAttributes.size(); j++) {
             ofMatrix4x4 modelMatrix = ofMatrix4x4::newIdentityMatrix();
             modelMatrix.translate(modelAttributes[j].x, modelAttributes[j].y, modelAttributes[j].z);
             //projection texture input
@@ -75,14 +93,13 @@ void ofApp::draw(){
             textureProjectionShader.setUniformTexture("projectorTex", projectors[i]->videoTexture, 0);
             
             models[j].draw();
-        }
+        }*/
+        projectors[i]->videoTexture.clear();
         if(projectors[i]->isSelected)
             text += ofToString(projectors[i]->projectorNum);
     }
     
     textureProjectionShader.end();
-    
-    //model.drawFaces();
     
     easyCam.end();
     ofDrawBitmapString(text,10,10);

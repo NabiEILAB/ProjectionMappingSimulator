@@ -65,16 +65,17 @@ void Projector::setup() {
     projectorParameters.add(yRotation.set("Y Rotate",yRotation,-360,360));
     projectorParameters.add(zRotation.set("Z Rotate",zRotation,-360,360));
     
-    //Setup the video file
     //videoPlayer.load("*.*");
     videoPlayer.play();
     
-    videoImg.allocate(videoPlayer.getWidth(), videoPlayer.getHeight(), ofImageType::OF_IMAGE_COLOR_ALPHA);
+    //videoImg.allocate(videoPlayer.getWidth(), videoPlayer.getHeight(), ofImageType::OF_IMAGE_COLOR_ALPHA);
+    colorImg.allocate(videoPlayer.getWidth(), videoPlayer.getHeight());
 }
 
 void Projector::update() {
     videoPlayer.update();
-    videoImg.setFromPixels(videoPlayer.getPixels());
+    //videoImg.setFromPixels(videoPlayer.getPixels());
+    colorImg.setFromPixels(videoPlayer.getPixels());
 }
 
 void Projector::draw() {
@@ -110,10 +111,20 @@ void Projector::draw() {
     float width = abs(topLeft.distance(topRight));
     float height = abs(topLeft.distance(bottomLeft));
     
-    videoImg.resize(width, height);
-    videoTexture = videoImg.getTexture();
+    //Use texture 1. directly use itself
+    //videoTexture = videoPlayer.getTexture();
+    
+    
+    //Use texture 2. resize through ofImage
+    //videoImg.resize(width, height);
+    
+    
+    //Use texture 3. resize through ofxCvColorImg
+    colorImg.resize(width, height);
+    videoTexture.allocate(colorImg.getPixels());
     videoTexture.setTextureMinMagFilter(GL_LINEAR, GL_LINEAR);
     videoTexture.setTextureWrap(GL_CLAMP_TO_BORDER_ARB, GL_CLAMP_TO_BORDER_ARB);
+    colorImg.clear();
     
     //Projection test
     //Projector's view matrix
@@ -143,9 +154,9 @@ void Projector::draw() {
     
     //0-1 bias matrix
     ofMatrix4x4 projectorBias = ofMatrix4x4::newIdentityMatrix();
-    projectorBias.scale(ofVec3f(0.5, -0.5, 0.5)); //why -0.5?...
-    //projectorBias.translate(ofVec3f(0.5, 0.5, 0.5));
-    projectorBias.makeTranslationMatrix(ofVec3f(0.5, 0.5, 0.5));
+    projectorBias.scale(ofVec3f(0.5, -0.5, 0.5)); //coordinate origin starts inversed.
+    projectorBias.translate(ofVec3f(0.5, 0.5, 0.5));
+    //projectorBias.makeTranslationMatrix(ofVec3f(0.5, 0.5, 0.5));
     projectorBias.scale(ofVec3f(width, height, 1));
     
     //projector matrix
@@ -153,6 +164,4 @@ void Projector::draw() {
     
     ofPopStyle();
     ofPopMatrix();
-    
-    videoImg.clear();
 }
