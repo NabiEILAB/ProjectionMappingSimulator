@@ -65,7 +65,7 @@ void Projector::setup() {
     projectorParameters.add(yRotation.set("Y Rotate",yRotation,-360,360));
     projectorParameters.add(zRotation.set("Z Rotate",zRotation,-360,360));
     
-    //videoPlayer.load("*.*");
+    videoPlayer.load("*.*");
     videoPlayer.play();
     
     //videoImg.allocate(videoPlayer.getWidth(), videoPlayer.getHeight(), ofImageType::OF_IMAGE_COLOR_ALPHA);
@@ -102,7 +102,9 @@ void Projector::draw() {
     ofDrawLine(xPos,yPos,zPos, xPos - xRadVal * 50, yPos - yRadVal * 50, zPos - zRadVal * 50);
     ofDrawLine(xPos,yPos,zPos, xPos + xRadVal * 50, yPos - yRadVal * 50, zPos - zRadVal * 50);
     
-    float distance = abs(0-zPos);
+    //Depth limit. if vertex's z value is far more than left operand('-500' in this case) then, texturing won't come up
+    //float distance = abs(0-zPos);
+    float distance = abs(-500 - zPos); //calculate between -500 and zPos.
     
     ofVec3f topLeft = ofVec3f(xPos - (xRadVal * distance), yPos + (yRadVal * distance), zPos - (zRadVal * distance));
     ofVec3f topRight = ofVec3f(xPos + (xRadVal * distance), yPos + (yRadVal * distance), zPos - (zRadVal * distance));
@@ -111,11 +113,11 @@ void Projector::draw() {
     float width = abs(topLeft.distance(topRight));
     float height = abs(topLeft.distance(bottomLeft));
     
-    //Use texture 1. directly use itself
+    //Use texture 1. directly use itself -> can't resize the image in realtime
     //videoTexture = videoPlayer.getTexture();
     
     
-    //Use texture 2. resize through ofImage
+    //Use texture 2. resize through ofImage -> rendering is very slow
     //videoImg.resize(width, height);
     
     
@@ -126,9 +128,8 @@ void Projector::draw() {
     videoTexture.setTextureWrap(GL_CLAMP_TO_BORDER_ARB, GL_CLAMP_TO_BORDER_ARB);
     colorImg.clear();
     
-    //Projection test
+    //Make matrices for Projective Texturing
     //Projector's view matrix
-    ofMatrix4x4 projectorView;
     ofVec3f projectorPos = ofVec3f(xPos, yPos, zPos);
     float sx, sy, sz, cx, cy, cz, theta;
     theta = xRotation * DEG2RAD;
@@ -146,20 +147,20 @@ void Projector::draw() {
     ofVec3f projectorTarget = ofVec3f(xPos - (sy * cz + cy * sx * sz), yPos - (sy * sz - cy * sx * cz), zPos - (cy * cx));
     ofVec3f projectorUp = ofVec3f(-1 * cx * sz, cx * cz, sx);
     //ofVec3f projectorUp = ofVec3f(0,1,0);
+    
     projectorView.makeLookAtViewMatrix(projectorPos, projectorTarget, projectorUp);
     
     //Projector's projection matrix
     float aspect = float(width/height);
-    ofMatrix4x4 projectorProjection = ofMatrix4x4::newPerspectiveMatrix(75, aspect, distance/100, distance); //need to find a way to calculate proper fov value
+    projectorProjection = ofMatrix4x4::newPerspectiveMatrix(75, aspect, distance/1000, distance); //need to find a way to calculate proper fov value
     
     //0-1 bias matrix
-    ofMatrix4x4 projectorBias = ofMatrix4x4::newIdentityMatrix();
+    projectorBias = ofMatrix4x4::newIdentityMatrix();
     projectorBias.scale(ofVec3f(0.5, -0.5, 0.5)); //coordinate origin starts inversed.
     projectorBias.translate(ofVec3f(0.5, 0.5, 0.5));
-    //projectorBias.makeTranslationMatrix(ofVec3f(0.5, 0.5, 0.5));
     projectorBias.scale(ofVec3f(width, height, 1));
     
-    //projector matrix
+    //Projector matrix
     projectorMatrix = projectorView * projectorProjection * projectorBias;
     
     ofPopStyle();

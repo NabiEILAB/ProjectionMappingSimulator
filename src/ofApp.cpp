@@ -13,33 +13,39 @@ void ofApp::setup(){
     for(int i=0; i<projectors.size(); i++)
         projectors[i]->setup();
     
-    //Load model test
+    //////////////////   Load model test   ///////////////////
     model.loadModel("CardBoardBox.3ds");
-    model.setPosition(0, 100, 0);
+    model.setPosition(0, 25, 0);
     model.setScale(1, 1, 1);
     model.setRotation(0, 180, 1, 0, 0);
     model.setRotation(1, 45, 0, 1, 0);
     
+    //Model itself can't adjust texturing... I don't know why. this code extracts mesh from the model
     ofMatrix4x4 modelMatrix = model.getModelMatrix();
     ofMatrix4x4 meshMatrix = model.getMeshHelper(0).matrix;
     ofMatrix4x4 concatMatrix;
     concatMatrix.preMult(modelMatrix);
     concatMatrix.preMult(meshMatrix);
     
+    //Reconstruct mesh's vertices and normals from the model object
     mesh = model.getMesh(0);
-    
     for(int i=0; i<mesh.getNumVertices(); i++) {
         ofVec3f& vert = mesh.getVertices()[i];
         vert.set(concatMatrix.preMult(vert));
+        ofVec3f& norm = mesh.getNormals()[i];
+        norm.set(concatMatrix.preMult(norm));
     }
+    //////////////////////////////////////////////////////////
     
-    //Draw video on primitive object test
-    /*plane.set(640,480);
+    
+    ///////     Draw video on primitive object test    ///////
+    plane.set(640,480);
     plane.setPosition(0,0,0);
     box.set(350,185,20);
     box.setPosition(-150,20,150);
+    box.rotate(33, 0, 1, 0);
     box2.set(30,45,80);
-    box2.setPosition(120,15,50);
+    box2.setPosition(120,15,120);
     ball.setRadius(50);
     ball.setPosition(150, 100, 150);
     
@@ -51,10 +57,16 @@ void ofApp::setup(){
     modelAttributes.push_back(ofVec3f(0,0,0));
     modelAttributes.push_back(ofVec3f(-150,20,150));
     modelAttributes.push_back(ofVec3f(120,15,50));
-    modelAttributes.push_back(ofVec3f(150,100,150));*/
+    modelAttributes.push_back(ofVec3f(150,100,150));
+    //////////////////////////////////////////////////////////
     
-    //load texture shader
+    
+    //load shaders
     textureProjectionShader.load("TextureProjection");
+    depthStoringShader.load("DepthStoring");
+    
+    //allocate Frame Buffer Object
+    allocateFbo();
 }
 
 //--------------------------------------------------------------
@@ -65,41 +77,100 @@ void ofApp::update(){
 
 //--------------------------------------------------------------
 void ofApp::draw(){
-    //MUST toggle off the ofDisableDepthTest() before draw the gui
-    //ofDisableDepthTest();
-    //gui.draw();
-    //ofEnableDepthTest();
-    
     easyCam.begin();
     
-    textureProjectionShader.begin();
     string text = "Current selected Projector : ";
     for(int i=0; i<projectors.size(); i++) {
         projectors[i]->draw();
-        //test case : draw on custom model
-        ofMatrix4x4 modelMatrix = ofMatrix4x4::newIdentityMatrix();
-        textureProjectionShader.setUniformMatrix4f("modelMatrix", modelMatrix);
-        textureProjectionShader.setUniformMatrix4f("projectorMatrix", projectors[i]->projectorMatrix);
-        textureProjectionShader.setUniformTexture("projectorTex", projectors[i]->videoTexture, 0);
-        mesh.draw();
         
-        //test case : one model in 0,0,0 - no need to translate modelMatrix
-        /*for(int j=0; j<modelAttributes.size(); j++) {
-            ofMatrix4x4 modelMatrix = ofMatrix4x4::newIdentityMatrix();
-            modelMatrix.translate(modelAttributes[j].x, modelAttributes[j].y, modelAttributes[j].z);
-            //projection texture input
-            textureProjectionShader.setUniformMatrix4f("modelMatrix", modelMatrix);
+        //test case : draw on custom model
+        
+        //Make depth map - render the scene in projector's view to FBO
+        /*shadowFbo.begin();
+            clearFbo();
+            depthStoringShader.begin();
+                depthStoringShader.setUniformMatrix4f("projectorProjectionMatrix", projectors[i]->projectorProjection);
+                depthStoringShader.setUniformMatrix4f("projectorViewMatrix", projectors[i]->projectorView);
+                ofMatrix4x4 modelMatrix = ofMatrix4x4::newIdentityMatrix();
+                depthStoringShader.setUniformMatrix4f("modelMatrix", modelMatrix);
+        
+                glCullFace(GL_FRONT);
+                mesh.draw();
+                glCullFace(GL_BACK);
+        
+            depthStoringShader.end();
+        shadowFbo.end();
+        
+        //Render the scene in camera's view
+        textureProjectionShader.begin();
             textureProjectionShader.setUniformMatrix4f("projectorMatrix", projectors[i]->projectorMatrix);
             textureProjectionShader.setUniformTexture("projectorTex", projectors[i]->videoTexture, 0);
+            textureProjectionShader.setUniformTexture("shadowTex", shadowFbo.getDepthTexture(), 1);
+        
+            ofMatrix4x4 biasMatrix = ofMatrix4x4::newIdentityMatrix();
+            biasMatrix.scale(0.5, 0.5, 0.5);
+            biasMatrix.translate(0.5, 0.5, 0.5);
+            textureProjectionShader.setUniformMatrix4f("biasMatrix", biasMatrix);
+            textureProjectionShader.setUniformMatrix4f("projectorProjectionMatrix", projectors[i]->projectorProjection);
+            textureProjectionShader.setUniformMatrix4f("projectorViewMatrix", projectors[i]->projectorView);
+            textureProjectionShader.setUniformMatrix4f("modelMatrix", modelMatrix);
+            textureProjectionShader.setUniform3f("projectorPos", ofVec3f(projectors[i]->xPos, projectors[i]->yPos, projectors[i]->zPos));
+        
+            mesh.draw();
+        textureProjectionShader.end();*/
+        
+        
+        
+        
+        //test case : draw on primitive objects
+        shadowFbo.begin();
+            clearFbo();
+            depthStoringShader.begin();
+                depthStoringShader.setUniformMatrix4f("projectorProjectionMatrix", projectors[i]->projectorProjection);
+                depthStoringShader.setUniformMatrix4f("projectorViewMatrix", projectors[i]->projectorView);
             
-            models[j].draw();
-        }*/
+                glCullFace(GL_FRONT);
+                for(int j=0; j<modelAttributes.size(); j++) {
+                    ofMatrix4x4 modelMatrix = ofMatrix4x4::newIdentityMatrix();
+                    if(j==1)
+                        modelMatrix.rotate(33, 0, 1, 0);
+                    modelMatrix.translate(modelAttributes[j].x, modelAttributes[j].y, modelAttributes[j].z);
+                    depthStoringShader.setUniformMatrix4f("modelMatrix", modelMatrix);
+                    models[j].draw();
+                }
+                glCullFace(GL_BACK);
+            depthStoringShader.end();
+        shadowFbo.end();
+        
+        
+        textureProjectionShader.begin();
+            textureProjectionShader.setUniformMatrix4f("projectorMatrix", projectors[i]->projectorMatrix);
+            textureProjectionShader.setUniformTexture("projectorTex", projectors[i]->videoTexture, 0);
+            textureProjectionShader.setUniformTexture("shadowTex", shadowFbo.getDepthTexture(), 1);
+        
+            ofMatrix4x4 biasMatrix = ofMatrix4x4::newIdentityMatrix();
+            biasMatrix.scale(0.5, 0.5, 0.5);
+            biasMatrix.translate(0.5, 0.5, 0.5);
+            textureProjectionShader.setUniformMatrix4f("biasMatrix", biasMatrix);
+            textureProjectionShader.setUniformMatrix4f("projectorProjectionMatrix", projectors[i]->projectorProjection);
+            textureProjectionShader.setUniformMatrix4f("projectorViewMatrix", projectors[i]->projectorView);
+            textureProjectionShader.setUniform3f("projectorPos", ofVec3f(projectors[i]->xPos, projectors[i]->yPos, projectors[i]->zPos));
+        
+            for(int j=0; j<modelAttributes.size(); j++) {
+                ofMatrix4x4 modelMatrix = ofMatrix4x4::newIdentityMatrix();
+                if(j==1)
+                    modelMatrix.rotate(33, 0, 1, 0);
+                modelMatrix.translate(modelAttributes[j].x, modelAttributes[j].y, modelAttributes[j].z);
+                textureProjectionShader.setUniformMatrix4f("modelMatrix", modelMatrix);
+            
+                models[j].draw();
+            }
+        textureProjectionShader.end();
+        
         projectors[i]->videoTexture.clear();
         if(projectors[i]->isSelected)
             text += ofToString(projectors[i]->projectorNum);
     }
-    
-    textureProjectionShader.end();
     
     easyCam.end();
     ofDrawBitmapString(text,10,10);
@@ -204,4 +275,23 @@ void ofApp::deleteProjector(int projectorNum) {
     for(int i=0; i<projectors.size(); i++)
         projectors[i]->projectorNum = i;
     refreshGUI();
+}
+
+void ofApp::allocateFbo() {
+    ofFbo::Settings settings;
+    settings.width = 1024;
+    settings.height = 768;
+    settings.textureTarget = GL_TEXTURE_2D;
+    settings.internalformat = GL_RGBA32F_ARB;
+    settings.useDepth = true;
+    settings.depthStencilAsTexture = true;
+    settings.useStencil = true;
+    shadowFbo.allocate(settings);
+}
+
+void ofApp::clearFbo() {
+    ofClear(0,0,0,1);
+    ofSetColor(255);
+    shadowFbo.getDepthTexture().draw(0,0);
+    glClear(GL_DEPTH_BUFFER_BIT);
 }

@@ -36,7 +36,11 @@ public :
     ofImage videoImg;
     ofxCvColorImage colorImg;
     
-    ofMatrix4x4 projectorMatrix;
+    //Projector's Matrices
+    ofMatrix4x4 projectorProjection; //Projection (Frustrum) Matrix
+    ofMatrix4x4 projectorView;       //View (Look at) Matrix
+    ofMatrix4x4 projectorBias;       //Bias (0.5 scale, 0.5 translate) Matrix
+    ofMatrix4x4 projectorMatrix;     //Bias * Projection * View Matrix
     
     Projector();
     Projector(float xPos, float yPos, float zPos);
