@@ -2,7 +2,7 @@
 
 템플릿 코드
 
-<br>Mac 64bit debug 모드에서 실행한다
+<br>Mac 64bit debug 또는 release 모드에서 실행한다
 <br>실행하면 3차원 그리드내에 3개의 projector 오브젝트와 free camera로 둘러보기가 가능
 <br>실행하면 4개의 모델링에 영상이 비춰지며 free camera로 둘러보기가 가능
 <br>실행하면 3D 모델링에 영상이 비춰지며 free camera로 둘러보기가 가능</br>
