@@ -29,7 +29,7 @@
 - TODO
 1. 도량 통일 : 좌표계에서의 1씩 이동을 실세계의 몇cm,m로 환산할지?
 2. 3D 모델링을 File Dialog로 불러오기
-3. 3D 모델링을 관리할 클래스 구현(Projector 클래스처럼, Scale, Translate, Rotate 기능필수) -> 모델링을 움직일 필요성의 이유로 보류됨
+3. 3D 모델링을 관리할 클래스 구현(Projector 클래스처럼, Scale, Translate, Rotate 기능필수) -> 모델링을 움직일 필요성이 있는지의 이유로 보류됨
 4. Projector 객체별로 영상을 File Dialog로 불러오기
 5. Projector 객체의 비디오 플레이백 기능 구현(GUI 패널에서 버튼 클릭?)
 6. easyCam 이용을 보다 쉽게(마우스 이동을 포함해서 키보드로까지)
