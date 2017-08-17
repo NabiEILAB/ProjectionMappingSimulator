@@ -75,6 +75,7 @@ void Projector::setup() {
 void Projector::update() {
     videoPlayer.update();
     //videoImg.setFromPixels(videoPlayer.getPixels());
+    colorImg.allocate(videoPlayer.getWidth(), videoPlayer.getHeight());
     colorImg.setFromPixels(videoPlayer.getPixels());
 }
 

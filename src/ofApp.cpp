@@ -67,6 +67,8 @@ void ofApp::setup(){
     
     //allocate Frame Buffer Object
     allocateFbo();
+    
+    gui.setup();
 }
 
 //--------------------------------------------------------------
