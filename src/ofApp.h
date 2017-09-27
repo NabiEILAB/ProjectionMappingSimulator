@@ -56,11 +56,8 @@ class ofApp : public ofBaseApp{
         ofShader textureProjectionShader;
         ofShader depthStoringShader;
     
-        //Frame Buffer Object(FBO)
-        ofFbo shadowFbo;
-    
         void refreshGUI();
         void deleteProjector(int projectorNum);
-        void allocateFbo();
-        void clearFbo();
+        void renderCustomModel();
+        void renderPrimitiveModel();
 };

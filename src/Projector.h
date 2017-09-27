@@ -32,15 +32,16 @@ public :
     bool isTrsMode; //for gizmo mode
     
     ofVideoPlayer videoPlayer;
-    ofTexture videoTexture;
-    ofImage videoImg;
-    ofxCvColorImage colorImg;
     
     //Projector's Matrices
     ofMatrix4x4 projectorProjection; //Projection (Frustrum) Matrix
     ofMatrix4x4 projectorView;       //View (Look at) Matrix
     ofMatrix4x4 projectorBias;       //Bias (0.5 scale, 0.5 translate) Matrix
     ofMatrix4x4 projectorMatrix;     //Bias * Projection * View Matrix
+    
+    //Projector's FBO (FBO contains shadow map and video scene as texture)
+    ofFbo shadowFbo;
+    ofFbo textureFbo;
     
     Projector();
     Projector(float xPos, float yPos, float zPos);
@@ -49,6 +50,10 @@ public :
     void setup();
     void update();
     void draw();
+    void allocateShadowFbo();
+    void allocateTextureFbo(int width, int height);
+    void clearShadowFbo();
+    void clearTextureFbo();
 };
 
 

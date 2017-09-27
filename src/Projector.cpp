@@ -68,15 +68,12 @@ void Projector::setup() {
     videoPlayer.load("*.*");
     videoPlayer.play();
     
-    //videoImg.allocate(videoPlayer.getWidth(), videoPlayer.getHeight(), ofImageType::OF_IMAGE_COLOR_ALPHA);
-    colorImg.allocate(videoPlayer.getWidth(), videoPlayer.getHeight());
+    allocateShadowFbo();
+    
 }
 
 void Projector::update() {
     videoPlayer.update();
-    //videoImg.setFromPixels(videoPlayer.getPixels());
-    colorImg.allocate(videoPlayer.getWidth(), videoPlayer.getHeight());
-    colorImg.setFromPixels(videoPlayer.getPixels());
 }
 
 void Projector::draw() {
@@ -114,20 +111,11 @@ void Projector::draw() {
     float width = abs(topLeft.distance(topRight));
     float height = abs(topLeft.distance(bottomLeft));
     
-    //Use texture 1. directly use itself -> can't resize the image in realtime
-    //videoTexture = videoPlayer.getTexture();
-    
-    
-    //Use texture 2. resize through ofImage -> rendering is very slow
-    //videoImg.resize(width, height);
-    
-    
-    //Use texture 3. resize through ofxCvColorImg
-    colorImg.resize(width, height);
-    videoTexture.allocate(colorImg.getPixels());
-    videoTexture.setTextureMinMagFilter(GL_LINEAR, GL_LINEAR);
-    videoTexture.setTextureWrap(GL_CLAMP_TO_BORDER_ARB, GL_CLAMP_TO_BORDER_ARB);
-    colorImg.clear();
+    allocateTextureFbo(width, height);
+    textureFbo.begin();
+        clearTextureFbo();
+        videoPlayer.draw(0, 0, width, height);
+    textureFbo.end();
     
     //Make matrices for Projective Texturing
     //Projector's view matrix
@@ -166,4 +154,40 @@ void Projector::draw() {
     
     ofPopStyle();
     ofPopMatrix();
+}
+
+void Projector::allocateShadowFbo() {
+    ofFbo::Settings settings;
+    settings.width = 1024;
+    settings.height = 768;
+    settings.textureTarget = GL_TEXTURE_2D;
+    settings.internalformat = GL_RGBA32F_ARB;
+    settings.useDepth = true;
+    settings.depthStencilAsTexture = true;
+    settings.useStencil = true;
+    
+    shadowFbo.allocate(settings);
+}
+
+void Projector::allocateTextureFbo(int width, int height) {
+    ofFbo::Settings settings;
+    settings.width = width;
+    settings.height = height;
+    settings.wrapModeVertical = GL_CLAMP_TO_BORDER_ARB;
+    settings.wrapModeHorizontal = GL_CLAMP_TO_BORDER_ARB;
+    textureFbo.allocate(settings);
+}
+
+void Projector::clearShadowFbo() {
+    ofClear(0);
+    ofSetColor(255);
+    shadowFbo.getDepthTexture().draw(0,0);
+    glClear(GL_DEPTH_BUFFER_BIT);
+}
+
+void Projector::clearTextureFbo() {
+    ofClear(0);
+    ofSetColor(255);
+    textureFbo.getTexture().draw(0,0);
+    glClear(GL_DEPTH_BUFFER_BIT);
 }
