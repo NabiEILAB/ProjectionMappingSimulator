@@ -4,9 +4,9 @@
 #include "ofxGui.h"
 #include "ofxAssimpModelLoader.h"
 #include "Projector.h"
+#include "MappingApp.h"
 
 class ofApp : public ofBaseApp{
-
 	public:
 		void setup();
 		void update();
@@ -40,24 +40,23 @@ class ofApp : public ofBaseApp{
         ofxAssimpModelLoader model;
         ofVboMesh mesh;
     
-        //Primitive object (for the video test)
-        ofPlanePrimitive plane;
-        ofBoxPrimitive box;
-        ofBoxPrimitive box2;
-        ofSpherePrimitive ball;
-    
-        //Dynamic array of3dPrimitive vector
-        vector<of3dPrimitive> models;
-    
-        //Dynamic array ofVec3f vector (for the store multiple model attribute)
-        vector<ofVec3f> modelAttributes;
-    
         //Shader
         ofShader textureProjectionShader;
         ofShader depthStoringShader;
     
+        //Window Pointers
+        shared_ptr<ofAppBaseWindow> mappingWindow;
+        shared_ptr<MappingApp> mappingGUI;
+    
+        int currentSelectedProjector;
+    
         void refreshGUI();
+        void addProjector();
         void deleteProjector(int projectorNum);
         void renderCustomModel();
         void renderPrimitiveModel();
+        void open3DFile(ofFileDialogResult openFileResult);
+        void reconstructMesh();
+        void openVideoFile(ofFileDialogResult openFileResult);
+        void setProjectorShader(int index);
 };

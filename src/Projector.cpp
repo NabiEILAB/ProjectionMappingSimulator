@@ -58,22 +58,26 @@ Projector::Projector(float xPos, float yPos, float zPos, float xRotation, float 
 void Projector::setup() {
     projectorParameters.setName("No." + ofToString(projectorNum) + " Projector");
     //projectorParameters.add(isPlaying.set("Video Play",false));
-    projectorParameters.add(xPos.set("X Pos",xPos,-1000,1000));
-    projectorParameters.add(yPos.set("Y Pos",yPos,-1000,1000));
-    projectorParameters.add(zPos.set("Z Pos",zPos,-1000,1000));
+    projectorParameters.add(xPos.set("X Pos",xPos,-3000,3000));
+    projectorParameters.add(yPos.set("Y Pos",yPos,-3000,3000));
+    projectorParameters.add(zPos.set("Z Pos",zPos,-3000,3000));
     projectorParameters.add(xRotation.set("X Rotate",xRotation,-360,360));
     projectorParameters.add(yRotation.set("Y Rotate",yRotation,-360,360));
     projectorParameters.add(zRotation.set("Z Rotate",zRotation,-360,360));
     
-    videoPlayer.load("*.*");
-    videoPlayer.play();
-    
     allocateShadowFbo();
+    
+    isSetted = false;
+    isSelected = false;
     
 }
 
 void Projector::update() {
+    if(!videoPlayer.isLoaded())
+        return ;
+    
     videoPlayer.update();
+    copiedTexture.allocate(videoPlayer.getPixels());
 }
 
 void Projector::draw() {
@@ -89,32 +93,68 @@ void Projector::draw() {
     ofRotate(zRotation,0,0,1);
     ofTranslate(-xPos,-yPos,-zPos);
     
-    //Projector color
-    //ofSetColor(100 + 37, 100 + 12, 100 + 68);
-    //ofDrawBox(xPos,yPos,zPos,20,5,10);
+    //Depth limit. if vertex's z value is far more than left operand('-4000' in this case) then, texturing won't come up
+    float distance = abs(-4000 - zPos); //calculate between -2000 and zPos.
+    
+    xRadVal = ceil(580 * distance / 1039 / 2);
+    yRadVal = ceil(363 * distance / 1039 / 2);
+    zRadVal = 1;
     
     //Draw light radiation line for about 50 pixels ahead
-    ofSetColor(255,0,0);
-    ofDrawLine(xPos,yPos,zPos, xPos - xRadVal * 50, yPos + yRadVal * 50, zPos - zRadVal * 50);
-    ofDrawLine(xPos,yPos,zPos, xPos + xRadVal * 50, yPos + yRadVal * 50, zPos - zRadVal * 50);
-    ofDrawLine(xPos,yPos,zPos, xPos - xRadVal * 50, yPos - yRadVal * 50, zPos - zRadVal * 50);
-    ofDrawLine(xPos,yPos,zPos, xPos + xRadVal * 50, yPos - yRadVal * 50, zPos - zRadVal * 50);
+    if(isSetted) {
+        if(isSelected)
+            ofSetColor(255, 165, 0);
+        else
+            ofSetColor(255,0,0);
+        
+        ofDrawLine(xPos - 1.6 * 10, yPos + 1.0 * 10, zPos - zRadVal * 10, xPos - 1.6 * 50, yPos + 1.0 * 50, zPos - zRadVal * 50);
+        ofDrawLine(xPos + 1.6 * 10, yPos + 1.0 * 10, zPos - zRadVal * 10, xPos + 1.6 * 50, yPos + 1.0 * 50, zPos - zRadVal * 50);
+        ofDrawLine(xPos - 1.6 * 10, yPos - 1.0 * 10, zPos - zRadVal * 10, xPos - 1.6 * 50, yPos - 1.0 * 50, zPos - zRadVal * 50);
+        ofDrawLine(xPos + 1.6 * 10, yPos - 1.0 * 10, zPos - zRadVal * 10, xPos + 1.6 * 50, yPos - 1.0 * 50, zPos - zRadVal * 50);
+        
+        ofDrawLine(xPos - 1.6 * 10, yPos + 1.0 * 10, zPos - zRadVal * 10, xPos + 1.6 * 10, yPos + 1.0 * 10, zPos - zRadVal * 10);
+        ofDrawLine(xPos + 1.6 * 10, yPos + 1.0 * 10, zPos - zRadVal * 10, xPos + 1.6 * 10, yPos - 1.0 * 10, zPos - zRadVal * 10);
+        ofDrawLine(xPos - 1.6 * 10, yPos - 1.0 * 10, zPos - zRadVal * 10, xPos - 1.6 * 10, yPos + 1.0 * 10, zPos - zRadVal * 10);
+        ofDrawLine(xPos + 1.6 * 10, yPos - 1.0 * 10, zPos - zRadVal * 10, xPos - 1.6 * 10, yPos - 1.0 * 10, zPos - zRadVal * 10);
+        
+        ofDrawLine(xPos - 1.6 * 50, yPos + 1.0 * 50, zPos - zRadVal * 50, xPos + 1.6 * 50, yPos + 1.0 * 50, zPos - zRadVal * 50);
+        ofDrawLine(xPos + 1.6 * 50, yPos + 1.0 * 50, zPos - zRadVal * 50, xPos + 1.6 * 50, yPos - 1.0 * 50, zPos - zRadVal * 50);
+        ofDrawLine(xPos + 1.6 * 50, yPos - 1.0 * 50, zPos - zRadVal * 50, xPos - 1.6 * 50, yPos - 1.0 * 50, zPos - zRadVal * 50);
+        ofDrawLine(xPos - 1.6 * 50, yPos - 1.0 * 50, zPos - zRadVal * 50, xPos - 1.6 * 50, yPos + 1.0 * 50, zPos - zRadVal * 50);
+    }
     
-    //Depth limit. if vertex's z value is far more than left operand('-500' in this case) then, texturing won't come up
-    //float distance = abs(0-zPos);
-    float distance = abs(-500 - zPos); //calculate between -500 and zPos.
+    ofVec3f topLeft = ofVec3f(xPos - (xRadVal), yPos + (yRadVal), zPos - (zRadVal * distance));
+    ofVec3f topRight = ofVec3f(xPos + (xRadVal), yPos + (yRadVal), zPos - (zRadVal * distance));
+    ofVec3f bottomLeft = ofVec3f(xPos - (xRadVal), yPos - (yRadVal), zPos - (zRadVal * distance));
+    ofVec3f bottomRight = ofVec3f(xPos + (xRadVal), yPos - (yRadVal), zPos - (zRadVal * distance));
     
-    ofVec3f topLeft = ofVec3f(xPos - (xRadVal * distance), yPos + (yRadVal * distance), zPos - (zRadVal * distance));
-    ofVec3f topRight = ofVec3f(xPos + (xRadVal * distance), yPos + (yRadVal * distance), zPos - (zRadVal * distance));
-    ofVec3f bottomLeft = ofVec3f(xPos - (xRadVal * distance), yPos - (yRadVal * distance), zPos - (zRadVal * distance));
-    ofVec3f bottomRight = ofVec3f(xPos + (xRadVal * distance), yPos - (yRadVal * distance), zPos - (zRadVal * distance));
-    float width = abs(topLeft.distance(topRight));
-    float height = abs(topLeft.distance(bottomLeft));
+    
+    width = abs(topLeft.distance(topRight));
+    height = abs(topLeft.distance(bottomLeft));
+    
+    //ofLog() << "Distance : " << abs(-4000 - zPos) << ", Width : " << width << ", Height : " << height << ", Aspect Ratio : " << width/height << ", Throw Ratio : " << distance / width;
     
     allocateTextureFbo(width, height);
     textureFbo.begin();
-        clearTextureFbo();
-        videoPlayer.draw(0, 0, width, height);
+    clearTextureFbo();
+    if(videoPlayer.isLoaded()) {
+        if(isSelected) {
+            /*ofPushStyle();
+            ofColor(255,0,0);
+            ofDrawRectangle(pt[0].x - 50, pt[0].y - 50, 50, 50);
+            ofDrawRectangle(pt[1].x, pt[1].y - 50, 50, 50);
+            ofDrawRectangle(pt[2].x, pt[2].y, 50, 50);
+            ofDrawRectangle(pt[3].x - 50, pt[3].y, 50, 50);
+            ofPopStyle();*/
+            copiedTexture.draw(pt[3], pt[2], pt[1], pt[0]);
+        }
+        else
+            videoPlayer.draw(0, 0, width, height);
+    }
+    
+    ofPoint points[4];
+    ofPoint centerPt;
+    centerPt.x = width/2; centerPt.y = height/2;
     textureFbo.end();
     
     //Make matrices for Projective Texturing
@@ -141,7 +181,7 @@ void Projector::draw() {
     
     //Projector's projection matrix
     float aspect = float(width/height);
-    projectorProjection = ofMatrix4x4::newPerspectiveMatrix(75, aspect, distance/1000, distance); //need to find a way to calculate proper fov value
+    projectorProjection = ofMatrix4x4::newPerspectiveMatrix(90, aspect, distance/1000, distance); //need to find a way to calculate proper fov value
     
     //0-1 bias matrix
     projectorBias = ofMatrix4x4::newIdentityMatrix();
@@ -190,4 +230,10 @@ void Projector::clearTextureFbo() {
     ofSetColor(255);
     textureFbo.getTexture().draw(0,0);
     glClear(GL_DEPTH_BUFFER_BIT);
+}
+
+void Projector::deactivate() {
+    isSetted = false;
+    isSelected = false;
+    videoPlayer.close();
 }

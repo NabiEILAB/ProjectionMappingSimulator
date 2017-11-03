@@ -23,15 +23,22 @@ public :
     ofParameter<float> zRotation;
     
     //Radiation value of projector's light. - this is a debug value
-    float xRadVal = 2;
-    float yRadVal = 1;
+    float xRadVal = 1;
+    float yRadVal = 1.6;
     float zRadVal = 1;
     
     int projectorNum;
+    bool isSetted;
     bool isSelected;
     bool isTrsMode; //for gizmo mode
     
+    float width,height;
+    
     ofVideoPlayer videoPlayer;
+    
+    //Used with mappingApp
+    ofTexture copiedTexture;
+    ofPoint pt[4];
     
     //Projector's Matrices
     ofMatrix4x4 projectorProjection; //Projection (Frustrum) Matrix
@@ -54,6 +61,7 @@ public :
     void allocateTextureFbo(int width, int height);
     void clearShadowFbo();
     void clearTextureFbo();
+    void deactivate();
 };
 
 
