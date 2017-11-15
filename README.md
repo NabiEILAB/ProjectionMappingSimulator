@@ -28,26 +28,26 @@
 
 <br></br>
 <br>테스트 방법
-<img src="screenshot1.png" width="640" height="480"></img>
+<br><img src="screenshot1.png" width="960" height="540"></img>
 <br>프로그램을 실행하면 3차원 그리드를 바라보는 화면과 별도의 윈도우창이 생성
-<img src="screenshot2.png" width="640" height="480"></img>
+<br><img src="screenshot2.png" width="960" height="540"></img>
 <br>마우스를 이용하거나 혹은 버튼을 이용하여 카메라를 자유롭게 이동할 수 있다.
-<img src="screenshot3.png" width="640" height="480"></img>
-<img src="screenshot4.png" width="640" height="480"></img>
+<br><img src="screenshot3.png" width="960" height="540"></img>
+<br><img src="screenshot4.png" width="960" height="540"></img>
 <br>상단의 "파일"부분은 미구현이며 옆의 "모델링" 메뉴를 통해 나온 드롭박스를 이용하여 3D 모델링을 불러올 수 있다.
 <br>단, 현재 모델링 파일의 세부적인 좌표위치 및 축회전을 적용할 수 없어서 프로그램상 임의로 고정된 값을 이용 
 <br>현재 불러올 수 있는 모델 확장자 - 3ds,ase,dxf,hmp,md2,md3,md5,mdc,mdl,nff,ply,stl,x,lwo,obj,smd,collada
-<img src="screenshot5.png" width="640" height="480"></img>
+<br><img src="screenshot5.png" width="960" height="540"></img>
 <br>그리드 좌표에 마우스 오른쪽 버튼을 클릭하면 해당 좌표에 빔 프로젝터 오브젝트를 생성할 수 있다.
-<img src="screenshot6.png" width="640" height="480"></img>
+<br><img src="screenshot6.png" width="960" height="540"></img>
 <br>3D 모델링으로 표현된 빔 프로젝터를 확인할 수 있고 하단의 패널 슬라이더를 통해 빔 프로젝터의 이동과 회전이 가능하다.
 <br>우측의 패널창에서는 (0,0,0)을 기준으로 현재 빔 프로젝터의 상대위치를 설명한다.
-<img src="screenshot7.png" width="640" height="480"></img>
+<br><img src="screenshot7.png" width="960" height="540"></img>
 <br>빔 프로젝터 모델링에 마우스 오른쪽 버튼을 클릭하면 빔 프로젝터에 비디오 영상을 로드하거나 빔 프로젝터를 제거할 수 있다.
-<img src="screenshot8.png" width="640" height="480"></img>
+<br><img src="screenshot8.png" width="960" height="540"></img>
 <br>영상과 모델링이 로드되어 있으면 빔 프로젝터의 위치에 따라 알맞게 모델링에 영상이 입혀지게 된다.
-<img src="screenshot9.png" width="640" height="480"></img>
-<br>우측의 윈도우에서는 영상을 '워핑'하여 원하는 모양으로 영상이 맵핑될수 있게 한다.
+<br><img src="screenshot9.png" width="960" height="540"></img>
+<br>우측의 윈도우에서는 영상을 '워핑'하여 원하는 모양으로 영상이 맵핑될수 있게 한다.</br>
 
 - TODO
 1. 도량 통일 : 좌표계에서의 1씩 이동을 실세계의 몇cm,m로 환산할지? -> 현재는 좌표상의 1이동을 1cm로 지정할 예정
