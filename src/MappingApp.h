@@ -43,6 +43,7 @@ public :
     void setProjector(Projector* projector);
     void setWarpingMode();
     void toRealValue();
+    void toUnrealValue();
 };
 
 

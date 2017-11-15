@@ -8,11 +8,6 @@
 
 #include "MappingApp.h"
 
-/*MappingApp::MappingApp(Projector* projector) {
-    ofBaseApp();
-    this->projector = projector;
-}*/
-
 void MappingApp::setup() {
     ofBackground(128);
     projector = NULL;
@@ -153,11 +148,6 @@ void MappingApp::setProjector(Projector* proj) {
     int videoWidth = projector->videoPlayer.getWidth();
     int videoHeight = projector->videoPlayer.getHeight();
     
-    projector->pt[0] = ofVec2f(0, projector->width);
-    projector->pt[1] = ofVec2f(projector->width, 0);
-    projector->pt[2] = ofVec2f(projector->width, projector->height);
-    projector->pt[3] = ofVec2f(0, projector->height);
-    
     realCenterPt.x = projector->width/2;
     realCenterPt.y = projector->height/2;
     
@@ -180,7 +170,7 @@ void MappingApp::setProjector(Projector* proj) {
         shorterOne = videoWidth;
         
         ratio = (float)shorterOne/longerOne;
-
+        
         longerOne = 600;
         shorterOne = 600 * ratio;
         
@@ -205,7 +195,19 @@ void MappingApp::setProjector(Projector* proj) {
     upY = points[0].y;
     downY = points[2].y;
     
-    toRealValue();
+    if(!projector->isMappingOn) {
+        projector->pt[0] = ofVec2f(0, projector->width);
+        projector->pt[1] = ofVec2f(projector->width, 0);
+        projector->pt[2] = ofVec2f(projector->width, projector->height);
+        projector->pt[3] = ofVec2f(0, projector->height);
+        
+        toRealValue();
+        
+        projector->isMappingOn = true;
+    }
+    else {
+        toUnrealValue();
+    }
 }
 
 void MappingApp::setWarpingMode() {
@@ -233,6 +235,26 @@ void MappingApp::toRealValue() {
             realPoints[realIndex].y = realCenterPt.y + abs(pointY) * heightRatio;
         
         projector->pt[realIndex] = realPoints[realIndex];
+    }
+}
+
+void MappingApp::toUnrealValue() {
+    float widthRatio = (rightX - leftX) / projector->width;
+    float heightRatio = (downY - upY) / projector->height;
+    
+    for(int i=3; i>=0; i--) {
+        float pointX = projector->pt[3-i].x - realCenterPt.x;
+        float pointY = projector->pt[3-i].y - realCenterPt.y;
+        
+        if(pointX > 0)
+            points[i].x = centerPt.x + abs(pointX) * widthRatio;
+        else
+            points[i].x = centerPt.x - abs(pointX) * widthRatio;
+        
+        if(pointY > 0)
+            points[i].y = centerPt.y - abs(pointY) * heightRatio;
+        else
+            points[i].y = centerPt.y + abs(pointY) * heightRatio;
     }
 }
 

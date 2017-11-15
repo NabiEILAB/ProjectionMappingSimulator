@@ -17,8 +17,6 @@ Projector::Projector() {
     this->xRotation = 0;
     this->yRotation = 0;
     this->zRotation = 0;
-    isSelected = false;
-    isTrsMode = false;
 }
 
 Projector::Projector(float xPos, float yPos, float zPos) {
@@ -28,8 +26,6 @@ Projector::Projector(float xPos, float yPos, float zPos) {
     this->xRotation = 0;
     this->yRotation = 0;
     this->zRotation = 0;
-    isSelected = false;
-    isTrsMode = false;
 }
 
 Projector::Projector(float xPos, float yPos, float zPos, float xRotation, float yRotation, float zRotation) {
@@ -39,8 +35,6 @@ Projector::Projector(float xPos, float yPos, float zPos, float xRotation, float 
     this->xRotation = xRotation;
     this->yRotation = yRotation;
     this->zRotation = zRotation;
-    isSelected = false;
-    isTrsMode = false;
 }
 
 Projector::Projector(float xPos, float yPos, float zPos, float xRotation, float yRotation, float zRotation, int projectorNum) {
@@ -50,9 +44,7 @@ Projector::Projector(float xPos, float yPos, float zPos, float xRotation, float 
     this->xRotation = xRotation;
     this->yRotation = yRotation;
     this->zRotation = zRotation;
-    this->projectorNum = projectorNum = projectorNum;
-    isSelected = false;
-    isTrsMode = false;
+    this->projectorNum = projectorNum;
 }
 
 void Projector::setup() {
@@ -69,7 +61,7 @@ void Projector::setup() {
     
     isSetted = false;
     isSelected = false;
-    
+    isMappingOn = false;
 }
 
 void Projector::update() {
@@ -100,34 +92,10 @@ void Projector::draw() {
     yRadVal = ceil(363 * distance / 1039 / 2);
     zRadVal = 1;
     
-    //Draw light radiation line for about 50 pixels ahead
-    if(isSetted) {
-        if(isSelected)
-            ofSetColor(255, 165, 0);
-        else
-            ofSetColor(255,0,0);
-        
-        ofDrawLine(xPos - 1.6 * 10, yPos + 1.0 * 10, zPos - zRadVal * 10, xPos - 1.6 * 50, yPos + 1.0 * 50, zPos - zRadVal * 50);
-        ofDrawLine(xPos + 1.6 * 10, yPos + 1.0 * 10, zPos - zRadVal * 10, xPos + 1.6 * 50, yPos + 1.0 * 50, zPos - zRadVal * 50);
-        ofDrawLine(xPos - 1.6 * 10, yPos - 1.0 * 10, zPos - zRadVal * 10, xPos - 1.6 * 50, yPos - 1.0 * 50, zPos - zRadVal * 50);
-        ofDrawLine(xPos + 1.6 * 10, yPos - 1.0 * 10, zPos - zRadVal * 10, xPos + 1.6 * 50, yPos - 1.0 * 50, zPos - zRadVal * 50);
-        
-        ofDrawLine(xPos - 1.6 * 10, yPos + 1.0 * 10, zPos - zRadVal * 10, xPos + 1.6 * 10, yPos + 1.0 * 10, zPos - zRadVal * 10);
-        ofDrawLine(xPos + 1.6 * 10, yPos + 1.0 * 10, zPos - zRadVal * 10, xPos + 1.6 * 10, yPos - 1.0 * 10, zPos - zRadVal * 10);
-        ofDrawLine(xPos - 1.6 * 10, yPos - 1.0 * 10, zPos - zRadVal * 10, xPos - 1.6 * 10, yPos + 1.0 * 10, zPos - zRadVal * 10);
-        ofDrawLine(xPos + 1.6 * 10, yPos - 1.0 * 10, zPos - zRadVal * 10, xPos - 1.6 * 10, yPos - 1.0 * 10, zPos - zRadVal * 10);
-        
-        ofDrawLine(xPos - 1.6 * 50, yPos + 1.0 * 50, zPos - zRadVal * 50, xPos + 1.6 * 50, yPos + 1.0 * 50, zPos - zRadVal * 50);
-        ofDrawLine(xPos + 1.6 * 50, yPos + 1.0 * 50, zPos - zRadVal * 50, xPos + 1.6 * 50, yPos - 1.0 * 50, zPos - zRadVal * 50);
-        ofDrawLine(xPos + 1.6 * 50, yPos - 1.0 * 50, zPos - zRadVal * 50, xPos - 1.6 * 50, yPos - 1.0 * 50, zPos - zRadVal * 50);
-        ofDrawLine(xPos - 1.6 * 50, yPos - 1.0 * 50, zPos - zRadVal * 50, xPos - 1.6 * 50, yPos + 1.0 * 50, zPos - zRadVal * 50);
-    }
-    
     ofVec3f topLeft = ofVec3f(xPos - (xRadVal), yPos + (yRadVal), zPos - (zRadVal * distance));
     ofVec3f topRight = ofVec3f(xPos + (xRadVal), yPos + (yRadVal), zPos - (zRadVal * distance));
     ofVec3f bottomLeft = ofVec3f(xPos - (xRadVal), yPos - (yRadVal), zPos - (zRadVal * distance));
     ofVec3f bottomRight = ofVec3f(xPos + (xRadVal), yPos - (yRadVal), zPos - (zRadVal * distance));
-    
     
     width = abs(topLeft.distance(topRight));
     height = abs(topLeft.distance(bottomLeft));
@@ -138,18 +106,14 @@ void Projector::draw() {
     textureFbo.begin();
     clearTextureFbo();
     if(videoPlayer.isLoaded()) {
-        if(isSelected) {
-            /*ofPushStyle();
-            ofColor(255,0,0);
-            ofDrawRectangle(pt[0].x - 50, pt[0].y - 50, 50, 50);
-            ofDrawRectangle(pt[1].x, pt[1].y - 50, 50, 50);
-            ofDrawRectangle(pt[2].x, pt[2].y, 50, 50);
-            ofDrawRectangle(pt[3].x - 50, pt[3].y, 50, 50);
-            ofPopStyle();*/
-            copiedTexture.draw(pt[3], pt[2], pt[1], pt[0]);
-        }
-        else
-            videoPlayer.draw(0, 0, width, height);
+        /*ofPushStyle();
+        ofColor(255,0,0);
+        ofDrawRectangle(pt[0].x - 50, pt[0].y - 50, 50, 50);
+        ofDrawRectangle(pt[1].x, pt[1].y - 50, 50, 50);
+        ofDrawRectangle(pt[2].x, pt[2].y, 50, 50);
+        ofDrawRectangle(pt[3].x - 50, pt[3].y, 50, 50);
+        ofPopStyle();*/
+        copiedTexture.draw(pt[3], pt[2], pt[1], pt[0]);
     }
     
     ofPoint points[4];
@@ -185,7 +149,7 @@ void Projector::draw() {
     
     //0-1 bias matrix
     projectorBias = ofMatrix4x4::newIdentityMatrix();
-    projectorBias.scale(ofVec3f(0.5, -0.5, 0.5)); //coordinate origin starts inversed.
+    projectorBias.scale(ofVec3f(0.5, -0.5, 0.5)); //coordinate origin inversed.
     projectorBias.translate(ofVec3f(0.5, 0.5, 0.5));
     projectorBias.scale(ofVec3f(width, height, 1));
     
@@ -230,6 +194,18 @@ void Projector::clearTextureFbo() {
     ofSetColor(255);
     textureFbo.getTexture().draw(0,0);
     glClear(GL_DEPTH_BUFFER_BIT);
+}
+
+void Projector::activate(float xPos, float yPos, float zPos) {
+    this->xPos = xPos;
+    this->yPos = yPos;
+    this->zPos = zPos;
+    xRotation = 0;
+    yRotation = 0;
+    zRotation = 0;
+    
+    isSetted = true;
+    isSelected = true;
 }
 
 void Projector::deactivate() {

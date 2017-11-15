@@ -30,7 +30,7 @@ public :
     int projectorNum;
     bool isSetted;
     bool isSelected;
-    bool isTrsMode; //for gizmo mode
+    bool isMappingOn;
     
     float width,height;
     
@@ -39,6 +39,8 @@ public :
     //Used with mappingApp
     ofTexture copiedTexture;
     ofPoint pt[4];
+    
+    string currentVideoURL;
     
     //Projector's Matrices
     ofMatrix4x4 projectorProjection; //Projection (Frustrum) Matrix
@@ -61,6 +63,7 @@ public :
     void allocateTextureFbo(int width, int height);
     void clearShadowFbo();
     void clearTextureFbo();
+    void activate(float xPos, float yPos, float zPos);
     void deactivate();
 };
 
