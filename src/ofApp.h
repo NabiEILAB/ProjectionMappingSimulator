@@ -64,6 +64,8 @@ class ofApp : public ofBaseApp{
         int projectorDropDownHoverIndex;
         bool isProjectorDropDownOn;
     
+        ofImage cameraZoomBackground;
+        ofImage cameraMoveBackground;
         ofImage cameraButton[6];
         ofImage cameraButtonPressed[6];
         int cameraButtonPressedIndex;

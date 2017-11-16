@@ -33,6 +33,7 @@ public :
     bool isMappingOn;
     
     float width,height;
+    float pivotWidth, pivotHeight, pivotDistance;
     
     ofVideoPlayer videoPlayer;
     

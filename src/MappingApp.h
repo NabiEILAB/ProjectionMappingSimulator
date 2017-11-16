@@ -23,6 +23,12 @@ public :
     ofPoint realCenterPt;
     int leftX,rightX,upY,downY;
     
+    ofImage panelWindow;
+    ofImage panelGrayBar;
+    ofImage panelGreenBar;
+    ofImage panelSliderButton;
+    int panelClickIndex;
+    
     
     //MappingApp(Projector* projector);
     void setup();
@@ -44,6 +50,7 @@ public :
     void setWarpingMode();
     void toRealValue();
     void toUnrealValue();
+    void drawPanel();
 };
 
 

@@ -62,6 +62,10 @@ void Projector::setup() {
     isSetted = false;
     isSelected = false;
     isMappingOn = false;
+    
+    pivotWidth = 580;
+    pivotHeight = 363;
+    pivotDistance = 1039;
 }
 
 void Projector::update() {
@@ -88,8 +92,10 @@ void Projector::draw() {
     //Depth limit. if vertex's z value is far more than left operand('-4000' in this case) then, texturing won't come up
     float distance = abs(-4000 - zPos); //calculate between -2000 and zPos.
     
-    xRadVal = ceil(580 * distance / 1039 / 2);
-    yRadVal = ceil(363 * distance / 1039 / 2);
+    //xRadVal = ceil(580 * distance / 1039 / 2);
+    //yRadVal = ceil(363 * distance / 1039 / 2);
+    xRadVal = ceil(pivotWidth * distance / pivotDistance / 2);
+    yRadVal = ceil(pivotHeight * distance / pivotDistance / 2);
     zRadVal = 1;
     
     ofVec3f topLeft = ofVec3f(xPos - (xRadVal), yPos + (yRadVal), zPos - (zRadVal * distance));

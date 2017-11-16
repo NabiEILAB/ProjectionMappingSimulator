@@ -28,36 +28,38 @@ void ofApp::setup(){
     //gui.setup();
     
     //UI resource setup
-    gridDropDown[0].load("UI/MouseDropDown/1.makeProjector.png");
-    gridDropDownHover[0].load("UI/MouseDropDown/2.makeProjectorHover.png");
+    gridDropDown[0].load("UI/MouseDropDown/makeProjector.png");
+    gridDropDownHover[0].load("UI/MouseDropDown/makeProjectorHover.png");
     gridDropDownHoverIndex = -1;
     isGridDropDownOn = false;
     
-    projectorDropDown[0].load("UI/MouseDropDown/5.videoLoad.png");
-    projectorDropDown[1].load("UI/MouseDropDown/3.deleteProjector.png");
-    projectorDropDownHover[0].load("UI/MouseDropDown/6.videoLoadHover.png");
-    projectorDropDownHover[1].load("UI/MouseDropDown/4.deleteProjectorHover.png");
+    projectorDropDown[0].load("UI/MouseDropDown/videoLoad.png");
+    projectorDropDown[1].load("UI/MouseDropDown/deleteProjector.png");
+    projectorDropDownHover[0].load("UI/MouseDropDown/videoLoadHover.png");
+    projectorDropDownHover[1].load("UI/MouseDropDown/deleteProjectorHover.png");
     projectorDropDownHoverIndex = -1;
     isProjectorDropDownOn = false;
     
-    headerMenu[0].load("UI/UpperMenu/1.file.png");
-    headerMenu[1].load("UI/UpperMenu/3.modeling.png");
-    headerHover[0].load("UI/UpperMenu/2.fileClick.png");
-    headerHover[1].load("UI/UpperMenu/4.modelingClick.png");
+    headerMenu[0].load("UI/UpperMenu/file.png");
+    headerMenu[1].load("UI/UpperMenu/modeling.png");
+    headerHover[0].load("UI/UpperMenu/fileClick.png");
+    headerHover[1].load("UI/UpperMenu/modelingClick.png");
     headerHoverIndex = -1;
     
-    subMenuFile[0].load("UI/UpperMenu/5.newProject.png");
-    subMenuFile[1].load("UI/UpperMenu/7.saveProject.png");
-    subMenuFile[2].load("UI/UpperMenu/9.loadProject.png");
-    subFileHover[0].load("UI/UpperMenu/6.newProjectHover.png");
-    subFileHover[1].load("UI/UpperMenu/8.saveProjectHover.png");
-    subFileHover[2].load("UI/UpperMenu/10.loadProjectHover.png");
+    subMenuFile[0].load("UI/UpperMenu/newProject.png");
+    subMenuFile[1].load("UI/UpperMenu/saveProject.png");
+    subMenuFile[2].load("UI/UpperMenu/loadProject.png");
+    subFileHover[0].load("UI/UpperMenu/newProjectHover.png");
+    subFileHover[1].load("UI/UpperMenu/saveProjectHover.png");
+    subFileHover[2].load("UI/UpperMenu/loadProjectHover.png");
     subFileHoverIndex = -1;
     
-    subMenuModeling[0].load("UI/UpperMenu/11.loadModeling.png");
-    subModelingHover[0].load("UI/UpperMenu/12.loadModelingHover.png");
+    subMenuModeling[0].load("UI/UpperMenu/loadModeling.png");
+    subModelingHover[0].load("UI/UpperMenu/loadModelingHover.png");
     subModelingHoverIndex = -1;
     
+    cameraZoomBackground.load("UI/Button/+-Background.png");
+    cameraMoveBackground.load("UI/Button/udlrBackground.png");
     cameraButton[0].load("UI/Button/+ deselect.png");
     cameraButton[1].load("UI/Button/- deselect.png");
     cameraButton[2].load("UI/Button/left deselect.png");
@@ -174,10 +176,10 @@ void ofApp::draw(){
     ofDisableDepthTest();
     //gui.draw();
     drawPanel();
+    drawButtons();
     ofEnableDepthTest();
     
     drawHeaders();
-    drawButtons();
     drawDropDownMenus();
 }
 
@@ -221,14 +223,16 @@ void ofApp::mouseMoved(int x, int y ){
     }
     
     switch(headerHoverIndex) {
-        case 0 : {
-            if(x > 250 && x <= 250 + 144) {
+        /*case 0 : {
+            float currentYPos = 20 + headerMenu[0].getHeight();
+            if(x > ofGetWidth() - 200 && x <= ofGetWidth() - 200 + subMenuFile[0].getWidth()) {
                 for(int i=0; i<sizeof(subFileHover)/sizeof(subFileHover[0]); i++) {
                     subFileHoverIndex = -1;
-                    if(y > 25 + (20 * i) && y <= 25 + 20 + (20 * i)) {
+                    if(y > currentYPos && y <= currentYPos + subMenuFile[i].getHeight()) {
                         subFileHoverIndex = i;
                         break;
                     }
+                    currentYPos += subMenuFile[i].getHeight();
                 }
             }
             else
@@ -236,13 +240,47 @@ void ofApp::mouseMoved(int x, int y ){
             break;
         }
         case 1 : {
-            if(x > 250 + 60 && x <= 250 + 60 + 144) {
+            float currentYPos = 20 + headerMenu[0].getHeight();
+            if(x > ofGetWidth() - 200 && x <= ofGetWidth() - 200 + subMenuFile[0].getWidth()) {
                 for(int i=0; i<sizeof(subModelingHover)/sizeof(subModelingHover[0]); i++) {
                     subModelingHoverIndex = -1;
-                    if(y > 25 + (20 * i) && y <= 25 + 20 + (20 * i)) {
+                    if(y > currentYPos && y <= currentYPos + subMenuModeling[i].getHeight()) {
                         subModelingHoverIndex = i;
                         break;
                     }
+                    currentYPos += subMenuModeling[i].getHeight();
+                }
+            }
+            else
+                subModelingHoverIndex = -1;
+            break;
+        }*/
+        case 0 : {
+            float currentYPos = 20 + headerMenu[0].getHeight()/4*3;
+            if(x > ofGetWidth() - 200 && x <= ofGetWidth() - 200 + subMenuFile[0].getWidth()/4*3) {
+                for(int i=0; i<sizeof(subFileHover)/sizeof(subFileHover[0]); i++) {
+                    subFileHoverIndex = -1;
+                    if(y > currentYPos && y <= currentYPos + subMenuFile[i].getHeight()/4*3) {
+                        subFileHoverIndex = i;
+                        break;
+                    }
+                    currentYPos += subMenuFile[i].getHeight()/4*3;
+                }
+            }
+            else
+                subFileHoverIndex = -1;
+            break;
+        }
+        case 1 : {
+            float currentYPos = 20 + headerMenu[0].getHeight()/4*3;
+            if(x > ofGetWidth() - 200 && x <= ofGetWidth() - 200 + subMenuFile[0].getWidth()/4*3) {
+                for(int i=0; i<sizeof(subModelingHover)/sizeof(subModelingHover[0]); i++) {
+                    subModelingHoverIndex = -1;
+                    if(y > currentYPos && y <= currentYPos + subMenuModeling[i].getHeight()/4*3) {
+                        subModelingHoverIndex = i;
+                        break;
+                    }
+                    currentYPos += subMenuModeling[i].getHeight()/4*3;
                 }
             }
             else
@@ -325,32 +363,68 @@ void ofApp::mousePressed(int x, int y, int button){
             isProjectorDropDownOn = false;
         }
         else {
-            if(x > 50 && x <= 50 + 70) {
-                if(y > 100 && y <= 100 + 70)
-                    cameraButtonPressedIndex = 0;
-                else if(y > 100 + 70 && y <= 100 + 70 + 70)
-                    cameraButtonPressedIndex = 1;
+            /*if(y > ofGetHeight()/2 - 200 && y <= ofGetHeight()/2 - 200 + cameraZoomBackground.getHeight()) {
+                if(x > 56 && x <= 56 + 56) {
+                    if(y > ofGetHeight()/2 - 192 && y <= ofGetHeight()/2 - 192 + 72)
+                        cameraButtonPressedIndex = 0;
+                    else if(y > ofGetHeight()/2 - 192 + 72 && y <= ofGetHeight()/2 - 192 + (72 * 2))
+                        cameraButtonPressedIndex = 1;
+                    else
+                        cameraButtonPressedIndex = -1;
+                }
+            }
+            else if(y > ofGetHeight()/2 && y <= ofGetHeight()/2 + cameraMoveBackground.getHeight()) {
+                if(y > ofGetHeight()/2 + 45 && y <= ofGetHeight()/2 + 45 + cameraButton[2].getHeight()) {
+                    if(x > 28 && x <= 28 + cameraButton[2].getWidth())
+                        cameraButtonPressedIndex = 2;
+                    else if(x > 106 && x <= 106 + cameraButton[2].getWidth())
+                        cameraButtonPressedIndex = 3;
+                    else
+                        cameraButtonPressedIndex = -1;
+                }
+                else if(x > 67 && x <= 67 + cameraButton[2].getWidth()) {
+                    if(y > ofGetHeight()/2 + 5 && y <= ofGetHeight()/2 + 5 + cameraButton[2].getHeight())
+                        cameraButtonPressedIndex = 4;
+                    else if(y > ofGetHeight()/2 + 81 && y <= ofGetHeight()/2 + 81 + cameraButton[2].getHeight())
+                        cameraButtonPressedIndex = 5;
+                    else
+                        cameraButtonPressedIndex = -1;
+                }
+                else
+                    cameraButtonPressedIndex = -1;
+            }*/
+            
+            //3/4 version
+            if(y > (ofGetHeight()/2 - 200)/4*3 && y <= (ofGetHeight()/2 - 200 + cameraZoomBackground.getHeight())/4*3) {
+                if(x > 56/4*3 && x <= (56 + 56)/4*3) {
+                    if(y > (ofGetHeight()/2 - 192)/4*3 && y <= (ofGetHeight()/2 - 192 + 72)/4*3)
+                        cameraButtonPressedIndex = 0;
+                    else if(y > (ofGetHeight()/2 - 192 + 72)/4*3 && y <= (ofGetHeight()/2 - 192 + (72 * 2))/4*3)
+                        cameraButtonPressedIndex = 1;
+                    else
+                        cameraButtonPressedIndex = -1;
+                }
+            }
+            else if(y > ofGetHeight()/2/4*3 && y <= (ofGetHeight()/2 + cameraMoveBackground.getHeight())/4*3) {
+                if(y > (ofGetHeight()/2 + 45)/4*3 && y <= (ofGetHeight()/2 + 45 + cameraButton[2].getHeight())/4*3) {
+                    if(x > 28/4*3 && x <= (28 + cameraButton[2].getWidth())/4*3)
+                        cameraButtonPressedIndex = 2;
+                    else if(x > 106/4*3 && x <= (106 + cameraButton[2].getWidth())/4*3)
+                        cameraButtonPressedIndex = 3;
+                    else
+                        cameraButtonPressedIndex = -1;
+                }
+                else if(x > 67/4*3 && x <= (67 + cameraButton[2].getWidth())/4*3) {
+                    if(y > (ofGetHeight()/2 + 5)/4*3 && y <= (ofGetHeight()/2 + 5 + cameraButton[2].getHeight())/4*3)
+                        cameraButtonPressedIndex = 4;
+                    else if(y > (ofGetHeight()/2 + 81)/4*3 && y <= (ofGetHeight()/2 + 81 + cameraButton[2].getHeight())/4*3)
+                        cameraButtonPressedIndex = 5;
+                    else
+                        cameraButtonPressedIndex = -1;
+                }
                 else
                     cameraButtonPressedIndex = -1;
             }
-            else if(y > 145 && y <= 145 + 50) {
-                if(x > 125 && x <= 125 + 50)
-                    cameraButtonPressedIndex = 2;
-                else if(x > 175 && x <= 175 + 50)
-                    cameraButtonPressedIndex = 3;
-                else
-                    cameraButtonPressedIndex = -1;
-            }
-            else if(x > 150 && x < 150 + 50) {
-                if(y > 100 && y <= 100 + 50)
-                    cameraButtonPressedIndex = 4;
-                else if(y > 190 && y <= 190 + 50)
-                    cameraButtonPressedIndex = 5;
-                else
-                    cameraButtonPressedIndex = -1;
-            }
-            else
-                cameraButtonPressedIndex = -1;
         }
         
         if(currentSelectedProjector != -1 && panelClickIndex == -1) {
@@ -410,7 +484,7 @@ void ofApp::mousePressed(int x, int y, int button){
             }
         }
         
-        if(y > ofGetHeight() - 220 && y <= ofGetHeight() - 220 + 20) {
+        if(y > ofGetHeight() - 200 && y <= ofGetHeight() - 200 + 18) {
             int index = 0;
             for(int i=0; i<7; i++) {
                 if(x > 10 + (90 * i) && x <= 10 + (90 * (i + 1))) {
@@ -436,12 +510,37 @@ void ofApp::mousePressed(int x, int y, int button){
         }
         
         
-        if(y > 0 && y <= 25) {
+        /*if(y > 20 && y <= 20 + headerMenu[0].getHeight()) {
             for(int i = 0; i < sizeof(headerHover)/sizeof(headerHover[0]); i++) {
                 headerHoverIndex = -1;
-                if(x > 250 + (60 * i) && x <= 250 + 60 + (60 * i)) {
-                    headerHoverIndex = i;
-                    break;
+                if(i != 0) {
+                    if(x > ofGetWidth() - 200 + headerMenu[i-1].getWidth() && x <= ofGetWidth() - 200 + headerMenu[i-1].getWidth() + headerMenu[i].getWidth()) {
+                        headerHoverIndex = i;
+                        break;
+                    }
+                }
+                else {
+                    if(x > ofGetWidth() - 200 && x <= ofGetWidth() - 200 + headerMenu[i].getWidth()) {
+                        headerHoverIndex = i;
+                        break;
+                    }
+                }
+            }
+        }*/
+        if(y > 20 && y <= 20 + (headerMenu[0].getHeight())/4*3) { //3/4 version
+            for(int i = 0; i < sizeof(headerHover)/sizeof(headerHover[0]); i++) {
+                headerHoverIndex = -1;
+                if(i != 0) {
+                    if(x > ofGetWidth() - 200 + (headerMenu[i-1].getWidth())/4*3 && x <= ofGetWidth() - 200 + (headerMenu[i-1].getWidth() + headerMenu[i].getWidth())/4*3) {
+                        headerHoverIndex = i;
+                        break;
+                    }
+                }
+                else {
+                    if(x > ofGetWidth() - 200 && x <= ofGetWidth() - 200 + (headerMenu[i].getWidth())/4*3) {
+                        headerHoverIndex = i;
+                        break;
+                    }
                 }
             }
         }
@@ -455,12 +554,12 @@ void ofApp::mousePressed(int x, int y, int button){
             }
             case 1 : {
                 //ofLog() << "menu 2";
-                save();
+                //save();
                 break;
             }
             case 2 : {
                 //ofLog() << "menu 3";
-                load();
+                //load();
                 break;
             }
                 subFileHoverIndex = -1;
@@ -578,6 +677,7 @@ void ofApp::addProjector(float x, float y, float z) {
 
 void ofApp::deleteProjector(int projectorNum) {
     projectors[projectorNum]->deactivate();
+    currentSelectedProjector = -1;
     refreshGUI();
 }
 
@@ -915,58 +1015,119 @@ void ofApp::drawDropDownMenus() {
 }
 
 void ofApp::drawButtons() {
+    //cameraZoomBackground.draw(50, ofGetHeight()/2 - 200);
+    cameraZoomBackground.draw(50/4*3, (ofGetHeight()/2 - 200)/4*3, cameraZoomBackground.getWidth()/4*3, cameraZoomBackground.getHeight()/4*3);
+    
     for(int i=0; i<2; i++) {
-        if(cameraButtonPressedIndex == i)
-            cameraButtonPressed[i].draw(50, 100 + (70 * i), 70, 70);
-        else
-            cameraButton[i].draw(50, 100 + (70 * i), 70, 70);
+        if(cameraButtonPressedIndex == i) {
+            //cameraButtonPressed[i].draw(56, ofGetHeight()/2 - 192 + (72 * i), 56, 56);
+            cameraButtonPressed[i].draw(56/4*3, (ofGetHeight()/2 - 192 + (72 * i))/4*3, 56/4*3, 56/4*3);
+        }
+        else {
+            //cameraButton[i].draw(56, ofGetHeight()/2 - 192 + (72 * i), 56, 56);
+            cameraButton[i].draw(56/4*3, (ofGetHeight()/2 - 192 + (72 * i))/4*3, 56/4*3, 56/4*3);
+        }
     }
     
-    if(cameraButtonPressedIndex == 2)
-        cameraButtonPressed[2].draw(125, 145, 50, 50);
-    else
-        cameraButton[2].draw(125, 145, 50, 50);
+    //cameraMoveBackground.draw(23, ofGetHeight()/2);
+    cameraMoveBackground.draw(23/4*3, (ofGetHeight()/2)/4*3, cameraMoveBackground.getWidth()/4*3, cameraMoveBackground.getHeight()/4*3);
     
-    if(cameraButtonPressedIndex == 3)
-        cameraButtonPressed[3].draw(175, 145, 50, 50);
-    else
-        cameraButton[3].draw(175, 145, 50, 50);
+    if(cameraButtonPressedIndex == 2) {//LEFT
+        //cameraButtonPressed[2].draw(28, ofGetHeight()/2 + 45);
+        cameraButtonPressed[2].draw(28/4*3, (ofGetHeight()/2 + 45)/4*3, cameraButtonPressed[2].getWidth()/4*3, cameraButtonPressed[2].getHeight()/4*3);
+    }
+    else {
+        //cameraButton[2].draw(28, ofGetHeight()/2 + 45);
+        cameraButton[2].draw(28/4*3, (ofGetHeight()/2 + 45)/4*3, cameraButton[2].getWidth()/4*3, cameraButton[2].getHeight()/4*3);
+    }
     
-    if(cameraButtonPressedIndex == 4)
-        cameraButtonPressed[4].draw(150, 100, 50, 50);
-    else
-        cameraButton[4].draw(150, 100, 50, 50);
+    if(cameraButtonPressedIndex == 3) {//RIGHT
+        //cameraButtonPressed[3].draw(106, ofGetHeight()/2 + 45);
+        cameraButtonPressed[3].draw(106/4*3, (ofGetHeight()/2 + 45)/4*3, cameraButtonPressed[3].getWidth()/4*3, cameraButtonPressed[3].getHeight()/4*3);
+    }
+    else {
+        //cameraButton[3].draw(106, ofGetHeight()/2 + 45);
+        cameraButton[3].draw(106/4*3, (ofGetHeight()/2 + 45)/4*3, cameraButton[3].getWidth()/4*3, cameraButton[3].getHeight()/4*3);
+    }
     
-    if(cameraButtonPressedIndex == 5)
-        cameraButtonPressed[5].draw(150, 190, 50, 50);
-    else
-        cameraButton[5].draw(150, 190, 50, 50);
+    if(cameraButtonPressedIndex == 4) { //UP
+        //cameraButtonPressed[4].draw(67, ofGetHeight()/2 + 5);
+        cameraButtonPressed[4].draw(67/4*3, (ofGetHeight()/2 + 5)/4*3, cameraButtonPressed[4].getWidth()/4*3, cameraButtonPressed[4].getHeight()/4*3);
+    }
+    else {
+        //cameraButton[4].draw(67, ofGetHeight()/2 + 5);
+        cameraButton[4].draw(67/4*3, (ofGetHeight()/2 + 5)/4*3, cameraButton[4].getWidth()/4*3, cameraButton[4].getHeight()/4*3);
+    }
+    
+    if(cameraButtonPressedIndex == 5) {// DOWN
+        //cameraButtonPressed[5].draw(67, ofGetHeight()/2 + 81);
+        cameraButtonPressed[5].draw(67/4*3, (ofGetHeight()/2 + 81)/4*3, cameraButtonPressed[5].getWidth()/4*3, cameraButtonPressed[5].getHeight()/4*3);
+    }
+    else {
+        //cameraButton[5].draw(67/4*3, (ofGetHeight()/2 + 81)/4*3);
+        cameraButton[5].draw(67/4*3, (ofGetHeight()/2 + 81)/4*3, cameraButton[5].getWidth()/4*3, cameraButton[5].getHeight()/4*3);
+    }
 }
 
 void ofApp::drawHeaders() {
     for(int i = 0; i < sizeof(headerMenu)/sizeof(headerMenu[0]); i++) {
-        if(headerHoverIndex == i)
-            headerHover[i].draw(250 + (60 * i), 0, 60, 25);
-        else
-            headerMenu[i].draw(250 + (60 * i), 0, 60, 25);
+        if(headerHoverIndex == i) {
+            if(i != 0) {
+                //headerHover[i].draw(ofGetWidth() - 200 + headerHover[i-1].getWidth(), 20);
+                headerHover[i].draw(ofGetWidth() - 200 + (headerHover[i-1].getWidth())/4*3, 20, headerHover[i].getWidth()/4*3, headerHover[i].getHeight()/4*3);
+            }
+            else {
+                //headerHover[i].draw(ofGetWidth() - 200, 20);
+                headerHover[i].draw(ofGetWidth() - 200, 20, headerHover[i].getWidth()/4*3, headerHover[i].getHeight()/4*3);
+            }
+        }
+        else {
+            if(i != 0) {
+                //headerMenu[i].draw(ofGetWidth() - 200 + headerMenu[i-1].getWidth(), 20);
+                headerMenu[i].draw(ofGetWidth() - 200 + (headerMenu[i-1].getWidth())/4*3, 20, headerMenu[i].getWidth()/4*3, headerMenu[i].getHeight()/4*3);
+            }
+            else {
+                //headerMenu[i].draw(ofGetWidth() - 200, 20);
+                headerMenu[i].draw(ofGetWidth() - 200, 20, headerMenu[i].getWidth()/4*3, headerMenu[i].getHeight()/4*3);
+            }
+        }
     }
     
     switch(headerHoverIndex) {
         case 0 : {
+            //float currentYPos = 20 + headerMenu[0].getHeight();
+            float currentYPos = 20 + (headerMenu[0].getHeight())/4*3;
             for(int i = 0; i < sizeof(subMenuFile)/sizeof(subMenuFile[0]); i++) {
-                if(subFileHoverIndex==i)
-                    subFileHover[i].draw(250, 25 + (20 * i), 144, 20);
-                else
-                    subMenuFile[i].draw(250, 25 + (20 * i), 144, 20);
+                if(subFileHoverIndex==i) {
+                    //subFileHover[i].draw(ofGetWidth() - 200, currentYPos);
+                    subFileHover[i].draw(ofGetWidth() - 200, currentYPos, subFileHover[i].getWidth()/4*3, subFileHover[i].getHeight()/4*3);
+                    //currentYPos += subFileHover[i].getHeight();
+                    currentYPos += subFileHover[i].getHeight()/4*3;
+                }
+                else {
+                    subMenuFile[i].draw(ofGetWidth() - 200, currentYPos, subMenuFile[i].getWidth()/4*3, subMenuFile[i].getHeight()/4*3);
+                    //currentYPos += subMenuFile[i].getHeight();
+                    currentYPos += subMenuFile[i].getHeight()/4*3;
+                }
             }
             break;
         }
         case 1 : {
+            //float currentYPos = 20 + headerMenu[0].getHeight();
+            float currentYPos = 20 + (headerMenu[0].getHeight())/4*3;
             for(int i = 0; i < sizeof(subMenuModeling)/sizeof(subMenuModeling[0]); i++) {
-                if(subModelingHoverIndex==i)
-                    subModelingHover[i].draw(250 + 60, 25 + (20 * i), 144, 20);
-                else
-                    subMenuModeling[i].draw(250 + 60, 25 + (20 * i), 144, 20);
+                if(subModelingHoverIndex==i) {
+                    //subModelingHover[i].draw(ofGetWidth() - 200, currentYPos);
+                    subModelingHover[i].draw(ofGetWidth() - 200, currentYPos, subModelingHover[i].getWidth()/4*3, subModelingHover[i].getHeight()/4*3);
+                    //currentYPos += subModelingHover[i].getHeight();
+                    currentYPos += subModelingHover[i].getHeight()/4*3;
+                }
+                else {
+                    //subMenuModeling[i].draw(ofGetWidth() - 200, currentYPos);
+                    subMenuModeling[i].draw(ofGetWidth() - 200, currentYPos, subMenuModeling[i].getWidth()/4*3, subMenuModeling[i].getHeight()/4*3);
+                    //currentYPos += subMenuModeling[i].getHeight();
+                    currentYPos += subModelingHover[i].getHeight()/4*3;
+                }
             }
             break;
         }
@@ -975,20 +1136,21 @@ void ofApp::drawHeaders() {
 
 void ofApp::drawPanel() {
     if(currentSelectedProjector != -1) {
+        panelWindow.draw(10, ofGetHeight() - 200, 1000, 190);
         int currentIndex = 0;
         for(int i=0; i<7; i++) {
             if(projectors[i]->isSetted) {
                 if(projectors[i]->isSelected) {
-                    panelLabel.draw(10 + (90 * currentIndex), ofGetHeight() - 220, 90, 20);
+                    panelLabelClick.draw(10 + (90 * currentIndex), ofGetHeight() - 200, 90, 20);
+                    ofDrawBitmapString("Proj. " + ofToString(i), 25 + (90 * currentIndex), ofGetHeight() - 200 + 15);
                 }
                 else {
-                    panelLabelClick.draw(10 + (90 * currentIndex), ofGetHeight() - 220, 90, 20);
+                    panelLabel.draw(10 + (90 * currentIndex), ofGetHeight() - 203, 90, 20);
+                    ofDrawBitmapString("Proj. " + ofToString(i), 25 + (90 * currentIndex), ofGetHeight() - 200 + 12);
                 }
-                ofDrawBitmapString("Proj. " + ofToString(i), 25 + (90 * currentIndex), ofGetHeight() - 220 + 15);
                 currentIndex++;
             }
         }
-        panelWindow.draw(10, ofGetHeight() - 200, 600, 190);
         
         float xPos = projectors[currentSelectedProjector]->xPos;
         float yPos = projectors[currentSelectedProjector]->yPos;
@@ -1043,7 +1205,7 @@ void ofApp::drawPanel() {
         panelGreenBar.draw(90, 740, barLength, 10);
         panelSliderButton.draw(90 + barLength - 10, 735, 20, 20);
         
-        panelWindow.draw(620, ofGetHeight() - 200, 300, 190);
+        //panelWindow.draw(660, ofGetHeight() - 200, 400, 190);
         string str = "current selected projector : ";
         str += ofToString(currentSelectedProjector);
         str += "\n";
@@ -1066,7 +1228,7 @@ void ofApp::drawPanel() {
         str += "upper offset from ground : ";
         str += ofToString(projectors[currentSelectedProjector]->yPos/100);
         str += "M\n";
-        ofDrawBitmapString(str, 650, 625);
+        ofDrawBitmapString(str, 680, 625);
     }
 }
 
