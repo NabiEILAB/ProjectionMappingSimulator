@@ -5,19 +5,22 @@ void ofApp::setup(){
     ofBackground(70,70,70);
     ofEnableDepthTest(); //draw in order of z value
     
-    //allocating new projector class - 7 projectors
+    //allocating new projector class - 3 projectors only due to the performance issue
     projectors.push_back(new Projector(0, 0, 0, 0, 0, 0, projectors.size()));
     projectors.push_back(new Projector(0, 0, 0, 0, 0, 0, projectors.size()));
     projectors.push_back(new Projector(0, 0, 0, 0, 0, 0, projectors.size()));
-    projectors.push_back(new Projector(0, 0, 0, 0, 0, 0, projectors.size()));
-    projectors.push_back(new Projector(0, 0, 0, 0, 0, 0, projectors.size()));
-    projectors.push_back(new Projector(0, 0, 0, 0, 0, 0, projectors.size()));
-    projectors.push_back(new Projector(0, 0, 0, 0, 0, 0, projectors.size()));
+    //projectors.push_back(new Projector(0, 0, 0, 0, 0, 0, projectors.size()));
+    //projectors.push_back(new Projector(0, 0, 0, 0, 0, 0, projectors.size()));
+    //projectors.push_back(new Projector(0, 0, 0, 0, 0, 0, projectors.size()));
+    //projectors.push_back(new Projector(0, 0, 0, 0, 0, 0, projectors.size()));
     //projectors.push_back(new Projector(300,20,850,0,0,0,projectors.size()));
     //projectors.push_back(new Projector(400,20,850,0,0,0,projectors.size()));
     
     for(int i=0; i<projectors.size(); i++)
         projectors[i]->setup();
+    
+    //camera set
+    easyCam.setFarClip(12000);
     
     //load shaders
     textureProjectionShader.load("TextureProjection");
@@ -25,6 +28,7 @@ void ofApp::setup(){
     projectorTextureShader.load("ProjectorTexture");
     
     currentSelectedProjector = -1;
+    isModelingSelected = -1;
     //gui.setup();
     
     //UI resource setup
@@ -108,23 +112,43 @@ void ofApp::draw(){
     }
     else if(cameraButtonPressedIndex==2) {
         easyCam.disableMouseInput();
-        easyCam.move(-10, 0, 0);
-        easyCam.setTarget(ofVec3f(easyCam.getTarget().getX() - 10,easyCam.getTarget().getY(), easyCam.getTarget().getZ()));
+        //easyCam.move(-10, 0, 0);
+        //easyCam.setTarget(ofVec3f(easyCam.getTarget().getX() - 10,easyCam.getTarget().getY(), easyCam.getTarget().getZ()));
+        easyCam.move(easyCam.getSideDir() * -10);
+        float x = easyCam.getTarget().getX() - easyCam.getSideDir().x * 10;
+        float y = easyCam.getTarget().getY() - easyCam.getSideDir().y * 10;
+        float z = easyCam.getTarget().getZ() - easyCam.getSideDir().z * 10;
+        easyCam.setTarget(ofVec3f(x,y,z));
     }
     else if(cameraButtonPressedIndex==3) {
         easyCam.disableMouseInput();
-        easyCam.move(10, 0, 0);
-        easyCam.setTarget(ofVec3f(easyCam.getTarget().getX() + 10,easyCam.getTarget().getY(), easyCam.getTarget().getZ()));
+        //easyCam.move(10, 0, 0);
+        //easyCam.setTarget(ofVec3f(easyCam.getTarget().getX() + 10,easyCam.getTarget().getY(), easyCam.getTarget().getZ()));
+        easyCam.move(easyCam.getSideDir() * 10);
+        float x = easyCam.getTarget().getX() + easyCam.getSideDir().x * 10;
+        float y = easyCam.getTarget().getY() + easyCam.getSideDir().y * 10;
+        float z = easyCam.getTarget().getZ() + easyCam.getSideDir().z * 10;
+        easyCam.setTarget(ofVec3f(x, y, z));
     }
     else if(cameraButtonPressedIndex==4) {
         easyCam.disableMouseInput();
-        easyCam.move(0, 10, 0);
-        easyCam.setTarget(ofVec3f(easyCam.getTarget().getX(), easyCam.getTarget().getY() + 10, easyCam.getTarget().getZ()));
+        //easyCam.move(0, 10, 0);
+        //easyCam.setTarget(ofVec3f(easyCam.getTarget().getX(), easyCam.getTarget().getY() + 10, easyCam.getTarget().getZ()));
+        easyCam.move(easyCam.getUpDir() * 10);
+        float x = easyCam.getTarget().getX() + easyCam.getUpDir().x * 10;
+        float y = easyCam.getTarget().getY() + easyCam.getUpDir().y * 10;
+        float z = easyCam.getTarget().getZ() + easyCam.getUpDir().z * 10;
+        easyCam.setTarget(ofVec3f(x, y, z));
     }
     else if(cameraButtonPressedIndex==5) {
         easyCam.disableMouseInput();
-        easyCam.move(0, -10, 0);
-        easyCam.setTarget(ofVec3f(easyCam.getTarget().getX(), easyCam.getTarget().getY() - 10, easyCam.getTarget().getZ()));
+        //easyCam.move(0, -10, 0);
+        //easyCam.setTarget(ofVec3f(easyCam.getTarget().getX(), easyCam.getTarget().getY() - 10, easyCam.getTarget().getZ()));
+        easyCam.move(easyCam.getUpDir() * -10);
+        float x = easyCam.getTarget().getX() - easyCam.getUpDir().x * 10;
+        float y = easyCam.getTarget().getY() - easyCam.getUpDir().y * 10;
+        float z = easyCam.getTarget().getZ() - easyCam.getUpDir().z * 10;
+        easyCam.setTarget(ofVec3f(x, y, z));
     }
     else {
         if(!easyCam.getMouseInputEnabled() && panelClickIndex == -1) {
@@ -142,7 +166,7 @@ void ofApp::draw(){
     ofEnableDepthTest();
     
     renderCustomModel();
-    
+
     //render projector modeling
     projectorTextureShader.begin();
     projectorTextureShader.setUniform3f("lightPos", easyCam.getX(), easyCam.getY(), easyCam.getZ());
@@ -493,7 +517,7 @@ void ofApp::mousePressed(int x, int y, int button){
                 }
             }
             int currentIndex = 0;
-            for(int i=0; i<7; i++) {
+            for(int i=0; i<projectors.size(); i++) {
                 if(projectors[i]->isSetted) {
                     if(currentIndex == index) {
                         if(currentSelectedProjector != -1 && currentSelectedProjector != i)
@@ -549,21 +573,22 @@ void ofApp::mousePressed(int x, int y, int button){
         
         switch(subFileHoverIndex) {
             case 0 : {
-                ofLog() << "menu 1";
+                //ofLog() << "menu 1";
                 break;
             }
             case 1 : {
                 //ofLog() << "menu 2";
-                //save();
+                save();
                 break;
             }
             case 2 : {
                 //ofLog() << "menu 3";
-                //load();
+                load();
                 break;
             }
-                subFileHoverIndex = -1;
+            //subFileHoverIndex = -1;
         }
+        subFileHoverIndex = -1;
         
         switch(subModelingHoverIndex) {
             case 0 : {
@@ -597,6 +622,13 @@ void ofApp::mousePressed(int x, int y, int button){
             }
             //refreshGUI();
         }
+        else {
+            if(isModelingSelected == 1) {
+                if(currentSelectedProjector != -1)
+                    projectors[currentSelectedProjector]->isSelected = false;
+                mappingGUI->projector = NULL;
+            }
+        }
     }
     else if(button == OF_MOUSE_BUTTON_RIGHT) {
         clickedCoord = ofPoint(x,y);
@@ -608,6 +640,7 @@ void ofApp::mousePressed(int x, int y, int button){
                     projectors[currentSelectedProjector]->isSelected = false;
                 projectors[nearestIndex]->isSelected = true;
                 currentSelectedProjector = nearestIndex;
+                mappingGUI->setProjector(projectors[nearestIndex]);
             }
             isProjectorDropDownOn = true;
         }
@@ -670,6 +703,7 @@ void ofApp::addProjector(float x, float y, float z) {
                 projectors[currentSelectedProjector]->isSelected = false;
             projectors[i]->activate(x, y, z);
             currentSelectedProjector = i;
+            mappingGUI->setProjector(projectors[currentSelectedProjector]);
             break;
         }
     }
@@ -717,6 +751,8 @@ void ofApp::renderCustomModel() {
     textureProjectionShader.setUniformMatrix4f("biasMatrix", bias);
     textureProjectionShader.setUniformMatrix4f("modelMatrix", modelMatrix);
     textureProjectionShader.setUniform3f("lightPos", easyCam.getX(), easyCam.getY(), easyCam.getZ());
+    textureProjectionShader.setUniform1f("isModelingSelected", (float)isModelingSelected);
+    //ofLog() << currentSelectedProjector;
     
     for(int j=0; j<meshes.size(); j++)
         meshes[j].draw();
@@ -733,11 +769,13 @@ void ofApp::open3DFile(ofFileDialogResult openFileResult) {
            fileExtension == "MD2" || fileExtension == "MD3" || fileExtension == "MD5" || fileExtension == "MDC" ||
            fileExtension == "MDL" || fileExtension == "NFF" || fileExtension == "PLY" || fileExtension == "STL" ||
            fileExtension == "X" || fileExtension == "LWO" || fileExtension == "OBJ" || fileExtension == "SMD" ||
-           fileExtension == "COLLADA") {
+           fileExtension == "COLLADA" || fileExtension == "DAE") {
             model.loadModel(openFileResult.getPath());
         }
         
-        model.setPosition(0, 250, 0);
+        currentModelURL = openFileResult.getPath();
+        
+        model.setPosition(0, 0, 0);
         model.setScale(5, 5, 5);
         model.setRotation(0, 180, 0, 0, 1);
         
@@ -746,7 +784,15 @@ void ofApp::open3DFile(ofFileDialogResult openFileResult) {
 }
 
 void ofApp::open3DFile(string url) {
-    //for the save, not implemented yet!!!
+    model.loadModel(url);
+    
+    currentModelURL = url;
+    
+    model.setPosition(0, 0, 0);
+    model.setScale(5, 5, 5);
+    model.setRotation(0, 180, 0, 0, 1);
+    
+    reconstructMesh();
 }
 
 void ofApp::reconstructMesh() {
@@ -786,6 +832,8 @@ void ofApp::reconstructMesh() {
     
     //Find lowest y value and closest z value then, reset position
     float leftestX = 3000;
+    float rightestX = -3000;
+    float highestY = -3000;
     float lowestY = 3000;
     float closestZ = -3000;
     
@@ -795,12 +843,19 @@ void ofApp::reconstructMesh() {
             
             if(vert.x < leftestX)
                 leftestX = vert.x;
+            if(vert.x > rightestX)
+                rightestX = vert.x;
+            if(vert.y > highestY)
+                highestY = vert.y;
             if(vert.y < lowestY)
                 lowestY = vert.y;
             if(vert.z > closestZ)
                 closestZ = vert.z;
         }
     }
+    
+    modelWidth = abs(rightestX - leftestX);
+    modelHeight = abs(highestY - lowestY);
     
     model.setPosition(-leftestX,-lowestY,-closestZ);
     //model.setPosition(0, -lowestY, -closestZ);
@@ -914,7 +969,7 @@ void ofApp::setProjectorShader(int index) {
         else
             textureProjectionShader.setUniform1f("isSet3",0);
     }
-    else if(index==3) {
+    /*else if(index==3) {
         textureProjectionShader.setUniformMatrix4f("projectorMatrix4", projectors[index]->projectorMatrix);
         textureProjectionShader.setUniformMatrix4f("projectorProjectionMatrix4", projectors[index]->projectorProjection);
         textureProjectionShader.setUniformMatrix4f("projectorViewMatrix4", projectors[index]->projectorView);
@@ -966,7 +1021,7 @@ void ofApp::setProjectorShader(int index) {
         else
             textureProjectionShader.setUniform1f("isSet7",0);
     }
-    /*else if(index==7) {
+    else if(index==7) {
         textureProjectionShader.setUniformMatrix4f("projectorMatrix8", projectors[index]->projectorMatrix);
         textureProjectionShader.setUniformMatrix4f("projectorProjectionMatrix8", projectors[index]->projectorProjection);
         textureProjectionShader.setUniformMatrix4f("projectorViewMatrix8", projectors[index]->projectorView);
@@ -1138,7 +1193,7 @@ void ofApp::drawPanel() {
     if(currentSelectedProjector != -1) {
         panelWindow.draw(10, ofGetHeight() - 200, 1000, 190);
         int currentIndex = 0;
-        for(int i=0; i<7; i++) {
+        for(int i=0; i<projectors.size(); i++) {
             if(projectors[i]->isSetted) {
                 if(projectors[i]->isSelected) {
                     panelLabelClick.draw(10 + (90 * currentIndex), ofGetHeight() - 200, 90, 20);
@@ -1230,6 +1285,15 @@ void ofApp::drawPanel() {
         str += "M\n";
         ofDrawBitmapString(str, 680, 625);
     }
+    else if(isModelingSelected==1) {
+        panelWindow.draw(10, ofGetHeight() - 200, 1000, 190);
+        
+        ofDrawBitmapString("Modeling Width : ", 20, 600);
+        ofDrawBitmapString("Modeling Height : ", 20, 630);
+        
+        ofDrawBitmapString(ofToString(modelWidth), 550, 600);
+        ofDrawBitmapString(ofToString(modelHeight), 550, 630);
+    }
 }
 
 void ofApp::save() {
@@ -1243,7 +1307,7 @@ void ofApp::save() {
         else
             textFile << currentModelURL << endl;
         for(int i=0; i<projectors.size(); i++) {
-            if(projectors[i]->isSetted) {
+            /*if(projectors[i]->isSetted) {
                 textFile << projectors[i]->xPos << endl;
                 textFile << projectors[i]->yPos << endl;
                 textFile << projectors[i]->zPos << endl;
@@ -1273,6 +1337,29 @@ void ofApp::save() {
             }
             else {
                 textFile << "not setted" << endl;
+            }*/
+            if(projectors[i]->isSetted) {
+                textFile << i << ',';
+                textFile << projectors[i]->xPos << ',' << projectors[i]->yPos << ',' << projectors[i]->zPos << ',';
+                textFile << projectors[i]->xRotation << ',' << projectors[i]->yRotation << ',' << projectors[i]->zRotation << ',';
+                textFile << projectors[i]->pt[0].x << ',' << projectors[i]->pt[0].y << ',';
+                textFile << projectors[i]->pt[1].x << ',' << projectors[i]->pt[1].y << ',';
+                textFile << projectors[i]->pt[2].x << ',' << projectors[i]->pt[2].y << ',';
+                textFile << projectors[i]->pt[3].x << ',' << projectors[i]->pt[3].y << ',';
+                textFile << projectors[i]->manufacturerName << ',';
+                textFile << projectors[i]->modelName << ',';
+                textFile << projectors[i]->pivotDistance << ',';
+                textFile << projectors[i]->pivotWidth << ',';
+                textFile << projectors[i]->pivotHeight << ',';
+                if(projectors[i]->videoPlayer.isLoaded())
+                    textFile << projectors[i]->currentVideoURL << ',';
+                else
+                    textFile << "no video" << ',';
+                if(projectors[i]->isMappingOn)
+                    textFile << "mapped";
+                else
+                    textFile << "not mapped";
+                textFile << endl;
             }
         }
         textFile.close();
@@ -1282,12 +1369,81 @@ void ofApp::save() {
 void ofApp::load() {
     ofFile textFile;
     ofBuffer buffer;
-    int currentLine = 0;
+    vector<string> saveList;
     string str;
     ofFileDialogResult loadFileResult = ofSystemLoadDialog("load file");
     if(loadFileResult.bSuccess) {
-        //open3DFile(openFileResult);
         textFile.open(loadFileResult.getPath(), ofFile::ReadOnly);
+        buffer = textFile.readToBuffer();
+        for(auto line : buffer.getLines())
+            saveList.push_back(line);
+        
+        if(saveList[0].compare("no modeling") != 0)
+            open3DFile(saveList[0]);
+        
+        for(int i=1; i<saveList.size()-1; i++) {
+            str = ofSplitString(saveList[i], ",")[0];
+            int index = stoi(str);
+            ofLog() << str;
+            projectors[index]->isSetted = true;
+            
+            str = ofSplitString(saveList[i], ",")[1];
+            projectors[index]->xPos = stof(str);
+            str = ofSplitString(saveList[i], ",")[2];
+            projectors[index]->yPos = stof(str);
+            str = ofSplitString(saveList[i], ",")[3];
+            projectors[index]->zPos = stof(str);
+            
+            str = ofSplitString(saveList[i], ",")[4];
+            projectors[index]->xRotation = stof(str);
+            str = ofSplitString(saveList[i], ",")[5];
+            projectors[index]->yRotation = stof(str);
+            str = ofSplitString(saveList[i], ",")[6];
+            projectors[index]->zRotation = stof(str);
+            
+            str = ofSplitString(saveList[i], ",")[7];
+            projectors[index]->pt[0].x = stof(str);
+            str = ofSplitString(saveList[i], ",")[8];
+            projectors[index]->pt[0].y = stof(str);
+            str = ofSplitString(saveList[i], ",")[9];
+            projectors[index]->pt[1].x = stof(str);
+            str = ofSplitString(saveList[i], ",")[10];
+            projectors[index]->pt[1].y = stof(str);
+            str = ofSplitString(saveList[i], ",")[11];
+            projectors[index]->pt[2].x = stof(str);
+            str = ofSplitString(saveList[i], ",")[12];
+            projectors[index]->pt[2].y = stof(str);
+            str = ofSplitString(saveList[i], ",")[13];
+            projectors[index]->pt[3].x = stof(str);
+            str = ofSplitString(saveList[i], ",")[14];
+            projectors[index]->pt[3].y = stof(str);
+            
+            str = ofSplitString(saveList[i], ",")[15];
+            projectors[index]->manufacturerName = str;
+            str = ofSplitString(saveList[i], ",")[16];
+            projectors[index]->modelName = str;
+            
+            str = ofSplitString(saveList[i], ",")[17];
+            projectors[index]->pivotDistance = stof(str);
+            str = ofSplitString(saveList[i], ",")[18];
+            projectors[index]->pivotWidth = stof(str);
+            str = ofSplitString(saveList[i], ",")[19];
+            projectors[index]->pivotHeight = stof(str);
+            
+            str = ofSplitString(saveList[i], ",")[20];
+            if(str.compare("no video") != 0) {
+                projectors[index]->currentVideoURL = str;
+                projectors[index]->videoPlayer.load(str);
+                projectors[index]->videoPlayer.play();
+            }
+            
+            str = ofSplitString(saveList[i], ",")[21];
+            if(str.compare("mapped") == 0)
+                projectors[index]->isMappingOn = true;
+        }
+        
+        //open3DFile(openFileResult);
+        /*textFile.open(loadFileResult.getPath(), ofFile::ReadOnly);
         buffer = textFile.readToBuffer();
         str = ofSplitString(buffer.getText(), "\n")[currentLine];
         
@@ -1368,8 +1524,9 @@ void ofApp::load() {
                 }
             }
             currentLine++;
-        }
+        }*/
     }
+    textFile.close();
 }
 
 ofVec3f ofApp::findNearGridPoint(ofPoint mousePt) {
@@ -1391,14 +1548,107 @@ ofVec3f ofApp::findNearGridPoint(ofPoint mousePt) {
 int ofApp::findNearProjectorIndex(ofPoint mousePt) {
     float nearestDistance = 50;
     int nearestIndex = -1;
+    /*if(model.getMeshCount()!=0) {
+        ofVec3f modelPt = easyCam.worldToScreen(model.getPosition());
+        float distance = modelPt.distance(mousePt);
+        if(distance < 100) {
+            ofLog() << distance;
+            isModelingSelected *= -1;
+            return nearestIndex;
+        }
+    }*/
     for(int i=0; i<projectors.size(); i++) {
         ofVec3f projectorPt = easyCam.worldToScreen(ofVec3f(projectors[i]->xPos, projectors[i]->yPos, projectors[i]->zPos));
         float distance = projectorPt.distance(mousePt);
         if(distance < 50 && distance < nearestDistance) {
             nearestDistance = distance;
-            if(projectors[i]->isSetted)
+            if(projectors[i]->isSetted) {
                 nearestIndex = i;
+                isModelingSelected = -1;
+            }
         }
     }
     return nearestIndex;
+}
+
+void ofApp::scaleModeling(float factor) {
+    model.setPosition(0, 0, 0);
+    int currentScale = model.getScale().x;
+    model.setScale(factor/currentScale, factor/currentScale, factor/currentScale);
+    ofLog() << model.getScale();
+    
+    float leftestX = 3000;
+    float rightestX = -3000;
+    float highestY = -3000;
+    float lowestY = 3000;
+    float closestZ = -3000;
+    
+    for(int i = 0; i < model.getMeshCount(); i++) {
+        ofMatrix4x4 modelMatrix = model.getModelMatrix();
+        ofMatrix4x4 meshMatrix = model.getMeshHelper(i).matrix;
+        ofMatrix4x4 concatMatrix;
+        concatMatrix.preMult(modelMatrix);
+        concatMatrix.preMult(meshMatrix);
+
+        //Reconstruct mesh's vertices and normals from the model object
+        for(int j=0; j<meshes[i].getNumVertices(); j++) {
+            ofVec3f& vert = meshes[i].getVertices()[j];
+            vert.set(concatMatrix.preMult(vert));
+            ofVec3f& norm = meshes[i].getNormals()[j];
+            norm.set(0, 0, 0);
+            
+            if(vert.x < leftestX)
+                leftestX = vert.x;
+            if(vert.x > rightestX)
+                rightestX = vert.x;
+            if(vert.y > highestY)
+                highestY = vert.y;
+            if(vert.y < lowestY)
+                lowestY = vert.y;
+            if(vert.z > closestZ)
+                closestZ = vert.z;
+        }
+        
+        modelWidth = abs(rightestX - leftestX);
+        modelHeight = abs(highestY - lowestY);
+        
+        ofLog() << modelWidth;
+        ofLog() << modelHeight;
+        
+        //Reconstruct normal vector
+        for(int j = 0; j < meshes[i].getIndices().size(); j += 3) {
+            int aIndex = meshes[i].getIndices()[j];
+            int bIndex = meshes[i].getIndices()[j + 1];
+            int cIndex = meshes[i].getIndices()[j + 2];
+            
+            ofVec3f offset1 = meshes[i].getVertices()[aIndex] - meshes[i].getVertices()[bIndex];
+            ofVec3f offset2 = meshes[i].getVertices()[cIndex] - meshes[i].getVertices()[bIndex];
+            ofVec3f normalValue = offset2.cross(offset1);
+            
+            meshes[i].getNormals()[aIndex] += normalValue;
+            meshes[i].getNormals()[bIndex] += normalValue;
+            meshes[i].getNormals()[cIndex] += normalValue;
+        }
+        
+        model.setPosition(-leftestX,-lowestY,-closestZ);
+        //model.setPosition(0, -lowestY, -closestZ);
+    }
+    
+    /*for(int i = 0; i < model.getMeshCount(); i++) {
+        //DO AGAIN
+        ofMatrix4x4 modelMatrix = model.getModelMatrix();
+        ofMatrix4x4 meshMatrix = model.getMeshHelper(i).matrix;
+        ofMatrix4x4 concatMatrix2;
+        concatMatrix2.preMult(modelMatrix);
+        concatMatrix2.preMult(meshMatrix);
+        for(int j = 0; j < meshes[i].getNumVertices(); j++) {
+            //translate vertices and normals
+            ofVec3f& vert = meshes[i].getVertices()[j];
+            vert += ofVec3f(-leftestX, -lowestY, -closestZ);
+            //vert += ofVec3f(0, -lowestY, -closestZ);
+            ofVec3f& norm = meshes[i].getNormals()[j];
+            norm += ofVec3f(-leftestX, -lowestY, -closestZ);
+            //norm += ofVec3f(0, -lowestY, -closestZ);
+        }
+    }*/
 }

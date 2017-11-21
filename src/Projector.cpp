@@ -66,6 +66,9 @@ void Projector::setup() {
     pivotWidth = 580;
     pivotHeight = 363;
     pivotDistance = 1039;
+    
+    manufacturerName = "";
+    modelName = "";
 }
 
 void Projector::update() {
@@ -210,6 +213,10 @@ void Projector::activate(float xPos, float yPos, float zPos) {
     yRotation = 0;
     zRotation = 0;
     
+    pivotWidth = 1600;
+    pivotHeight = 900;
+    pivotDistance = 1000;
+    
     isSetted = true;
     isSelected = true;
 }
@@ -217,5 +224,8 @@ void Projector::activate(float xPos, float yPos, float zPos) {
 void Projector::deactivate() {
     isSetted = false;
     isSelected = false;
+    
+    manufacturerName = "";
+    modelName = "";
     videoPlayer.close();
 }

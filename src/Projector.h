@@ -53,6 +53,10 @@ public :
     ofFbo shadowFbo;
     ofFbo textureFbo;
     
+    //Projector's product data
+    string manufacturerName;
+    string modelName;
+    
     Projector();
     Projector(float xPos, float yPos, float zPos);
     Projector(float xPos, float yPos, float zPos, float xRotation, float yRotation, float zRotation);

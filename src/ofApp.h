@@ -41,6 +41,8 @@ class ofApp : public ofBaseApp{
         ofxAssimpModelLoader projectorModel;
         vector<ofMesh> meshes;
         ofMesh projectorMesh;
+        float modelWidth;
+        float modelHeight;
     
         //Shaders
         ofShader textureProjectionShader;
@@ -89,6 +91,7 @@ class ofApp : public ofBaseApp{
         int panelClickIndex;
     
         int currentSelectedProjector;
+        int isModelingSelected;
         string currentModelURL;
     
         void refreshGUI();
@@ -109,4 +112,5 @@ class ofApp : public ofBaseApp{
         void load();
         ofVec3f findNearGridPoint(ofPoint mousePt);
         int findNearProjectorIndex(ofPoint mousePt);
+        void scaleModeling(float factor);
 };

@@ -21,6 +21,49 @@ void MappingApp::setup() {
     panelSliderButton.load("UI/Panel/sliderButton.png");
     panelClickIndex = -1;
     ofEnableDepthTest();
+    
+    manufacturerMenu.load("UI/DropDown/chooseMenu.png");
+    manufacturerClick.load("UI/DropDown/chooseMenuClick.png");
+    modelMenu.load("UI/DropDown/chooseMenu.png");
+    modelClick.load("UI/DropDown/chooseMenuClick.png");
+    manuHoverIndex = -1;
+    modelHoverIndex = -1;
+    manuClicked = false;
+    modelClicked = false;
+    
+    topMenu.load("UI/DropDown/topMenu.png");
+    topMenuHover.load("UI/DropDown/topMenuHover.png");
+    centerMenu.load("UI/DropDown/centerMenu.png");
+    centerMenuHover.load("UI/DropDown/centerMenuHover.png");
+    bottomMenu.load("UI/DropDown/bottomMenu.png");
+    bottomMenuHover.load("UI/DropDown/bottomMenuHover.png");
+    check.load("UI/DropDown/checkIcon.png");
+    
+    string str;
+    ofFile file;
+    ofBuffer buffer;
+    file.open("Spec/projector_spec_list.txt");
+    buffer = file.readToBuffer();
+    for(auto line : buffer.getLines())
+        specList.push_back(line);
+    
+    for(int i=0; i<specList.size(); i++) {
+        if(i==0)
+            manufacturerNameList.push_back(ofSplitString(specList[i],",")[0]);
+        else {
+            if(ofSplitString(specList[i],",")[0].compare(ofSplitString(specList[i-1],",")[0])!=0)
+               manufacturerNameList.push_back(ofSplitString(specList[i],",")[0]);
+        }
+        /*if(i!=0 && ofSplitString(specList[i],",")[0].compare("Barco")==0) {
+            ofLog() << ofSplitString(specList[i],",")[1];
+            ofLog() << ofSplitString(specList[i],",")[2];
+            ofLog() << ofSplitString(specList[i],",")[3];
+            ofLog() << ofSplitString(specList[i],",")[4];
+        }*/
+    }
+    
+    /*for(int i=0; i<manufacturerNameList.size(); i++)
+        ofLog() << manufacturerNameList[i];*/
 }
 
 void MappingApp::update() {
@@ -49,9 +92,9 @@ void MappingApp::draw() {
         ofDrawBitmapString("width : " + ofToString(projector->width), 10, 40);
         ofDrawBitmapString("height : " + ofToString(projector->height), 10, 50);
         
-        ofDisableDepthTest();
+        /*ofDisableDepthTest();
         drawPanel();
-        ofEnableDepthTest();
+        ofEnableDepthTest();*/
         
         /*ofPushStyle();
         ofNoFill();
@@ -82,7 +125,10 @@ void MappingApp::draw() {
     ofDrawLine(points[2], centerPt);
     ofDrawLine(points[3], centerPt);
     ofPopStyle();
-
+    
+    ofDisableDepthTest();
+    drawChooseMenu();
+    ofEnableDepthTest();
     
     ofDrawBitmapString(text, 10, 10);
 }
@@ -110,7 +156,36 @@ void MappingApp::keyReleased(int key){
 
 //--------------------------------------------------------------
 void MappingApp::mouseMoved(int x, int y ){
-    
+    if(manuClicked) {
+        float currentYPos = 30 + manufacturerMenu.getHeight();
+        if(x > 10 && x <= 10 + manufacturerMenu.getWidth() * 1.5) {
+            for(int i = 0; i < manufacturerNameList.size(); i++) {
+                manuHoverIndex = -1;
+                if(y > currentYPos && y <= currentYPos + manufacturerMenu.getHeight()) {
+                    manuHoverIndex = i;
+                    break;
+                }
+                currentYPos += manufacturerMenu.getHeight();
+            }
+        }
+        else
+            manuHoverIndex = -1;
+    }
+    else if(modelClicked) {
+        float currentYPos = 90 + modelMenu.getHeight();
+        if(x > 10 && x <= 10 + modelMenu.getWidth()) {
+            for(int i = 0; i < modelNameList.size(); i++) {
+                modelHoverIndex = -1;
+                if(y > currentYPos && y <= currentYPos + modelMenu.getHeight()) {
+                    modelHoverIndex = i;
+                    break;
+                }
+                currentYPos += modelMenu.getHeight();
+            }
+        }
+        else
+            modelHoverIndex = -1;
+    }
 }
 
 //--------------------------------------------------------------
@@ -155,7 +230,7 @@ void MappingApp::mouseDragged(int x, int y, int button){
 
 //--------------------------------------------------------------
 void MappingApp::mousePressed(int x, int y, int button){
-    if(projector->videoPlayer.isLoaded() && panelClickIndex == -1) {
+    /*if(projector->videoPlayer.isLoaded() && panelClickIndex == -1) {
         float videoPivotDistance = projector->pivotDistance;
         float videoPivotWidth = projector->pivotWidth;
         float videoPivotHeight = projector->pivotHeight;
@@ -183,6 +258,40 @@ void MappingApp::mousePressed(int x, int y, int button){
                 //setProjector(projector);
             }
         }
+    }*/
+    if(y > 30 && y <= 30 + manufacturerMenu.getHeight() && !modelClicked) {
+        if(x > 10 && x <= 10 + manufacturerMenu.getWidth() * 1.5) {
+            manuClicked = true;
+        }
+        else
+            manuClicked = false;
+    }
+    else if(y > 90 && y <= 90 + modelMenu.getHeight() && !manuClicked) {
+        if(x > 10 && x <= 10 + modelMenu.getWidth()) {
+            modelClicked = true;
+        }
+        else
+            modelClicked = false;
+    }
+    else {
+        manuClicked = false;
+        modelClicked = false;
+    }
+    
+    if(manuHoverIndex!=-1) {
+        projector->manufacturerName = manufacturerNameList[manuHoverIndex];
+        manuHoverIndex = -1;
+        manuClicked = false;
+        setModelList();
+    }
+    
+    if(modelHoverIndex!=-1) {
+        projector->modelName = ofSplitString(modelNameList[modelHoverIndex],",")[1];
+        projector->pivotDistance = stof(ofSplitString(modelNameList[modelHoverIndex],",")[2]);
+        projector->pivotWidth = stof(ofSplitString(modelNameList[modelHoverIndex],",")[3]);
+        projector->pivotHeight = stof(ofSplitString(modelNameList[modelHoverIndex],",")[4]);
+        modelHoverIndex = -1;
+        modelClicked = false;
     }
 }
 
@@ -364,7 +473,7 @@ void MappingApp::toUnrealValue() {
     }
 }
 
-void MappingApp::drawPanel() {
+/*void MappingApp::drawPanel() {
     panelWindow.draw(10, ofGetHeight() - 150, 450, 140);
     
     float videoPivotDistance = projector->pivotDistance;
@@ -395,4 +504,149 @@ void MappingApp::drawPanel() {
     barLength = 250 * lengthRatio;
     panelGreenBar.draw(135, ofGetHeight() - 50, barLength, 10);
     panelSliderButton.draw(135 + barLength - 10, ofGetHeight() - 55, 20, 20);
+}*/
+
+void MappingApp::drawChooseMenu() {
+    string currentManufacturer = projector->manufacturerName;
+    string currentModel = projector->modelName;
+    if(!manuClicked) {
+        manufacturerMenu.draw(10, 30, manufacturerMenu.getWidth() * 1.5, manufacturerMenu.getHeight());
+        if(currentManufacturer.compare("")==0) {
+            ofPushStyle();
+            ofSetColor(0, 0, 0);
+            ofDrawBitmapString("Choose a Manufacturer", 40, 55);
+            ofPopStyle();
+        }
+        else {
+            ofPushStyle();
+            ofSetColor(0, 0, 0);
+            ofDrawBitmapString(projector->manufacturerName, 40, 55);
+            ofPopStyle();
+        }
+    }
+    else {
+        manufacturerClick.draw(10, 30, manufacturerClick.getWidth() * 1.5, manufacturerClick.getHeight());
+        if(currentManufacturer.compare("")==0) {
+            ofPushStyle();
+            ofSetColor(255, 255, 255);
+            ofDrawBitmapString("Choose a Manufacturer", 40, 55);
+            ofPopStyle();
+        }
+        else {
+            ofPushStyle();
+            ofSetColor(255, 255, 255);
+            ofDrawBitmapString(projector->manufacturerName, 40, 55);
+            ofPopStyle();
+        }
+    }
+    
+    if(!modelClicked) {
+        modelMenu.draw(10, 90);
+        if(currentModel.compare("")==0) {
+            ofPushStyle();
+            ofSetColor(0, 0, 0);
+            ofDrawBitmapString("Select a model", 30, 115);
+            ofPopStyle();
+        }
+        else {
+            ofPushStyle();
+            ofSetColor(0, 0, 0);
+            ofDrawBitmapString(projector->modelName, 30, 115);
+            ofPopStyle();
+        }
+    }
+    else {
+        modelClick.draw(10, 90);
+        if(currentModel.compare("")==0) {
+            ofPushStyle();
+            ofSetColor(255, 255, 255);
+            ofDrawBitmapString("Select a model", 30, 115);
+            ofPopStyle();
+        }
+        else {
+            ofPushStyle();
+            ofSetColor(255, 255, 255);
+            ofDrawBitmapString(projector->modelName, 30, 115);
+            ofPopStyle();
+        }
+    }
+    
+    if(modelClicked) {
+        for(int i=0; i<modelNameList.size(); i++) {
+            if(i==0) {
+                if(modelHoverIndex==i)
+                    topMenuHover.draw(10, 90 + modelMenu.getHeight(), modelMenu.getWidth(), modelMenu.getHeight());
+                else
+                    topMenu.draw(10, 90 + modelMenu.getHeight(), modelMenu.getWidth(), modelMenu.getHeight());
+            }
+            else if(i==modelNameList.size()-1) {
+                if(modelHoverIndex==i)
+                    bottomMenuHover.draw(10, 90 + modelMenu.getHeight() * (i + 1), modelMenu.getWidth(), modelMenu.getHeight());
+                else
+                    bottomMenu.draw(10, 90 + modelMenu.getHeight() * (i + 1), modelMenu.getWidth(), modelMenu.getHeight());
+            }
+            else {
+                if(modelHoverIndex==i)
+                    centerMenuHover.draw(10, 90 + modelMenu.getHeight() * (i + 1), modelMenu.getWidth(), modelMenu.getHeight());
+                else
+                    centerMenu.draw(10, 90 + modelMenu.getHeight() * (i + 1), modelMenu.getWidth(), modelMenu.getHeight());
+            }
+            if(modelHoverIndex==i) {
+                ofPushStyle();
+                ofSetColor(255, 255, 255);
+                ofDrawBitmapString(ofSplitString(modelNameList[i],",")[1], 40, 110 + 40 * (i + 1));
+                ofPopStyle();
+            }
+            else {
+                ofPushStyle();
+                ofSetColor(0,0,0);
+                ofDrawBitmapString(ofSplitString(modelNameList[i],",")[1], 40, 110 + 40 * (i + 1));
+                ofPopStyle();
+            }
+        }
+    }
+    if(manuClicked) {
+        for(int i=0; i<manufacturerNameList.size(); i++) {
+            if(i==0) {
+                if(manuHoverIndex==i)
+                    topMenuHover.draw(10, 30 + manufacturerMenu.getHeight(), manufacturerMenu.getWidth() * 1.5, manufacturerMenu.getHeight());
+                else
+                    topMenu.draw(10, 30 + manufacturerMenu.getHeight(), manufacturerMenu.getWidth() * 1.5, manufacturerMenu.getHeight());
+            }
+            else if(i==manufacturerNameList.size()-1) {
+                if(manuHoverIndex==i)
+                    bottomMenuHover.draw(10, 30 + manufacturerMenu.getHeight() * (i + 1), manufacturerMenu.getWidth() * 1.5, manufacturerMenu.getHeight());
+                else
+                bottomMenu.draw(10, 30 + manufacturerMenu.getHeight() * (i + 1), manufacturerMenu.getWidth() * 1.5, manufacturerMenu.getHeight());
+            }
+            else {
+                if(manuHoverIndex==i)
+                    centerMenuHover.draw(10, 30 + manufacturerMenu.getHeight() * (i + 1), manufacturerMenu.getWidth() * 1.5, manufacturerMenu.getHeight());
+                else
+                    centerMenu.draw(10, 30 + manufacturerMenu.getHeight() * (i + 1), manufacturerMenu.getWidth() * 1.5, manufacturerMenu.getHeight());
+            }
+            if(manuHoverIndex==i) {
+                ofPushStyle();
+                ofSetColor(255, 255, 255);
+                ofDrawBitmapString(manufacturerNameList[i], 40, 50 + 40 * (i + 1));
+                ofPopStyle();
+            }
+            else {
+                ofPushStyle();
+                ofSetColor(0,0,0);
+                ofDrawBitmapString(manufacturerNameList[i], 40, 50 + 40 * (i + 1));
+                ofPopStyle();
+            }
+        }
+    }
+}
+
+void MappingApp::setModelList() {
+    modelNameList.clear();
+    projector->modelName = "";
+    for(int i=0; i<specList.size(); i++) {
+        if(ofSplitString(specList[i],",")[0].compare(projector->manufacturerName)==0) {
+            modelNameList.push_back(specList[i]);
+        }
+    }
 }

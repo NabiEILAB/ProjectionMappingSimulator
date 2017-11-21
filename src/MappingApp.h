@@ -29,6 +29,27 @@ public :
     ofImage panelSliderButton;
     int panelClickIndex;
     
+    ofImage manufacturerMenu;
+    ofImage manufacturerClick;
+    ofImage modelMenu;
+    ofImage modelClick;
+    vector<ofImage*> manufacturerList;
+    vector<ofImage*> modelList;
+    vector<string> manufacturerNameList;
+    vector<string> specList;
+    vector<string> modelNameList;
+    bool manuClicked;
+    bool modelClicked;
+    int manuHoverIndex;
+    int modelHoverIndex;
+    
+    ofImage topMenu;
+    ofImage topMenuHover;
+    ofImage centerMenu;
+    ofImage centerMenuHover;
+    ofImage bottomMenu;
+    ofImage bottomMenuHover;
+    ofImage check;
     
     //MappingApp(Projector* projector);
     void setup();
@@ -50,7 +71,9 @@ public :
     void setWarpingMode();
     void toRealValue();
     void toUnrealValue();
-    void drawPanel();
+    //void drawPanel();
+    void drawChooseMenu();
+    void setModelList();
 };
 
 

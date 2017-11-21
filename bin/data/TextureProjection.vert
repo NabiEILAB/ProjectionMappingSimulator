@@ -1,5 +1,6 @@
 #version 150
 
+
 //Shared variables
 uniform mat4 modelViewProjectionMatrix;
 uniform mat4 modelViewMatrix;
@@ -208,72 +209,14 @@ void setProjector7() {
     halfVector7 = normalize(L+V);
 }
 
-//eighth projector's variables
-/*uniform mat4 projectorMatrix8;
-uniform mat4 projectorProjectionMatrix8;
-uniform mat4 projectorViewMatrix8;
-uniform vec3 projectorPos8;
-uniform float isSet8;
-out vec4 projTextCoord8;
-out vec4 shadowTextCoord8;
-out vec3 projectorDirVarying8;
-out float distVarying8;
-out vec3 halfVector8;
-out float isSetVarying8;
-void setProjector8() {
-    isSetVarying8 = isSet8;
-    if(isSet8<=0)
-        return ;
-    projTextCoord8 = projectorMatrix8 * modelMatrix * position;
-    shadowTextCoord8 = (biasMatrix * projectorProjectionMatrix8 * projectorViewMatrix8) * modelMatrix * position;
-    
-    vec3 aux = projectorPos8 - vec3(modelMatrix * position);
-    projectorDirVarying8 = normalize(aux);
-    distVarying8 = length(aux);
-    
-    vec3 L = projectorPos8 - position.xyz;
-    vec3 V = -position.xyz;
-    halfVector8 = normalize(L+V);
-}
-
-//ninth projector's variables
-uniform mat4 projectorMatrix9;
-uniform mat4 projectorProjectionMatrix9;
-uniform mat4 projectorViewMatrix9;
-uniform vec3 projectorPos9;
-uniform float isSet9;
-out vec4 projTextCoord9;
-out vec4 shadowTextCoord9;
-out vec3 projectorDirVarying9;
-out float distVarying9;
-out vec3 halfVector9;
-out float isSetVarying9;
-void setProjector9() {
-    isSetVarying9 = isSet9;
-    if(isSet9<=0)
-        return ;
-    projTextCoord9 = projectorMatrix9 * modelMatrix * position;
-    shadowTextCoord9 = (biasMatrix * projectorProjectionMatrix9 * projectorViewMatrix9) * modelMatrix * position;
-    
-    vec3 aux = projectorPos9 - vec3(modelMatrix * position);
-    projectorDirVarying9 = normalize(aux);
-    distVarying9 = length(aux);
-    
-    vec3 L = projectorPos9 - position.xyz;
-    vec3 V = -position.xyz;
-    halfVector9 = normalize(L+V);
-}*/
-
 void main() {
     setProjector1();
     setProjector2();
     setProjector3();
-    setProjector4();
-    setProjector5();
-    setProjector6();
-    setProjector7();
-    //setProjector8();
-    //setProjector9();
+    //setProjector4();
+    //setProjector5();
+    //setProjector6();
+    //setProjector7();
 
     fragPos = vec3(modelMatrix * position);
     
@@ -281,48 +224,3 @@ void main() {
     
     normalVarying = normalize(normal);
 }
-
-//////////////// 응 안돼 ////////////////////////////
-/*uniform mat4 modelViewProjectionMatrix;
-uniform mat4 modelViewMatrix;
-uniform mat4 viewMatrix;
-uniform mat4 normalMatrix;
-
-uniform mat4 modelMatrix;
-uniform mat4 projectorMatrix;
-uniform mat4 projectorProjectionMatrix;
-uniform mat4 projectorViewMatrix;
-uniform mat4 biasMatrix;
-
-uniform vec3 projectorPos;
-
-in vec4 position;
-in vec3 normal;
-
-out vec4 projTextCoord;
-out vec4 shadowTextCoord;
-
-out vec3 projectorDirVarying;
-out vec3 normalVarying;
-
-out vec3 halfVector;
-out float distVarying;
-
-void main() {
-    projTextCoord = projectorMatrix * modelMatrix * position;
-    shadowTextCoord = (biasMatrix * projectorProjectionMatrix * projectorViewMatrix) * modelMatrix * position;
-    
-    vec3 aux = projectorPos - vec3(modelMatrix * position);
-    projectorDirVarying = normalize(aux);
-    distVarying = length(aux);
-    
-    vec3 L = projectorPos - position.xyz;
-    vec3 V = -position.xyz;
-    halfVector = normalize(L+V);
-    
-    gl_Position = modelViewProjectionMatrix * position;
-    
-    normalVarying = normalize(normal);
-}*/
-//////////////// 응 안돼 ////////////////////////////
-

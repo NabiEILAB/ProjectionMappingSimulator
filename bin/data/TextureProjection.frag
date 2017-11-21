@@ -2,7 +2,6 @@
 #version 150
 
 //Shared variables
-//uniform int runningProjector[10];
 out vec4 fragColor;
 in vec3 normalVarying;
 
@@ -33,62 +32,10 @@ void drawProjector1() {
     NdotL = max(dot(normalVarying, projectorDirVarying1), 0.0);
     if(NdotL > 0.0) {
         if(NdotL < 1.0)
-            NdotL = 1.0; //att가 1보다 커도 NdotL이 거리가 가까울때 1 아래로 내려가서 오히려 밝기값이 약해지기 때문에 1보다 작으면 1로 바꾸기
+            NdotL = 1.0;
         
-        //https://imdoingitwrong.wordpress.com/2011/01/31/light-attenuation/ 에서 버전은 radius를 추가(코드에선 height로)
         att = 1.5 / (1.0 + (2.0 / radius1 * distVarying1) + (1.0 / (radius1 * radius1)) * (distVarying1 * distVarying1));
         att += -0.5 / (1.0 + (2.0 / radius1 * (1500.0 - distVarying1)) + (1.0 / (radius1 * radius1)) * ((1500.0 - distVarying1) * (1500.0 - distVarying1)));
-        
-        //기존 버전인데 모델의 크기가 가변하면 똑같이 밝기값 처리가 안되는 문제 발생
-        //  att = 5000.0 / (0.1 + 0.1 * distVarying1 + 0.1 * distVarying1 * distVarying1);
-        //att += -5000.0 / (0.1 + 0.1 * (1000.0 - distVarying1) + 0.1 * (1000.0 - distVarying1) * (1000.0 - distVarying1));
-        
-        /*float constantAttenuation = 1.0;
-        float linearAttenuation = 0.22;
-        float quadraticAttenuation = 0.20;
-        
-        if (distVarying1<70.0){
-            constantAttenuation=1.0;
-            linearAttenuation=0.7;
-            quadraticAttenuation=1.8;
-        }
-        
-        else if (distVarying1<130.0){
-            constantAttenuation=1.0;
-            linearAttenuation=0.35;
-            quadraticAttenuation=0.44;
-        }
-        
-        else if (distVarying1<200.0){
-            constantAttenuation=1.0;
-            linearAttenuation=0.22;
-            quadraticAttenuation=0.20;
-        }
-        
-        if (distVarying1<320.0){
-            constantAttenuation=1.0;
-            linearAttenuation=0.14;
-            quadraticAttenuation=0.07;
-        }
-        if (distVarying1<500.0){
-            constantAttenuation=1.0;
-            linearAttenuation=0.09;
-            quadraticAttenuation=0.32;
-        }
-        
-        if (distVarying1<650.0){
-            constantAttenuation=1.0;
-            linearAttenuation=0.07;
-            quadraticAttenuation=0.017; 
-        }
-        
-        if (distVarying1<1000.0){
-            constantAttenuation=1.0;
-            linearAttenuation=0.045;
-            quadraticAttenuation=0.0075; 
-        }
-        
-        att = constantAttenuation / ((1 + linearAttenuation * distVarying1) * (1 + quadraticAttenuation * distVarying1 * distVarying1));*/
         
         lightColor += att * vec4(diffuseLight * NdotL * ambientLight, 1.0);
         halfV = normalize(halfVector1);
@@ -569,158 +516,15 @@ void drawProjector7() {
     }
 }
 
-//eighth projector's variables
-/*uniform sampler2D shadowTex8;
-uniform sampler2DRect projectorTex8;
-in vec4 projTextCoord8;
-in vec4 shadowTextCoord8;
-in vec3 projectorDirVarying8;
-in vec3 halfVector8;
-in float distVarying8;
-uniform float radius8;
-in float isSetVarying8;
-void drawProjector8() {
-    if(isSetVarying8<=0)
-        return ;
-    
-    vec3 n,halfV;
-    float NdotL, NdotHV;
-    float spotEffect;
-    float att;
-    float shadowBias = 0.0001;
-    vec3 ambientLight = vec3(1.0, 1.0, 1.0);
-    vec3 diffuseLight = vec3(1.0, 1.0, 1.0);
-    vec4 specularLight = vec4(1.0, 1.0, 1.0, 1.0);
-    vec4 lightColor = vec4(1.0, 1.0, 1.0, 1.0);
-    
-    NdotL = max(dot(normalVarying, projectorDirVarying8), 0.0);
-    if(NdotL > 0.0) {
-        if(NdotL < 1.0)
-            NdotL = 1.0;
-        //att = 5000 / (0.1 + 0.1 * distVarying2 + 0.1 * distVarying2 * distVarying2);
-        //att += -5000 / (0.1 + 0.1 * (1000 - distVarying2) + 0.1 * (1000 - distVarying2) * (1000 - distVarying2));
-        att = 1.5 / (1.0 + (2.0 / radius8 * distVarying8) + (1.0 / (radius8 * radius8)) * (distVarying8 * distVarying8));
-        att += -0.5 / (1.0 + (2.0 / radius8 * (1500.0 - distVarying8)) + (1.0 / (radius8 * radius8)) * ((1500.0 - distVarying8) * (1500.0 - distVarying8)));
-        lightColor += att * vec4(NdotL * diffuseLight, 1.0);
-        halfV = normalize(halfVector8);
-        NdotHV = max(dot(normalVarying, halfV), 0.0);
-        float shineness = 1;
-        lightColor += att * specularLight * pow(NdotHV, shineness);
-        
-        vec4 projTexColor;
-        vec3 tex_coords = shadowTextCoord8.xyz / shadowTextCoord8.w;
-        
-        vec2 poissonDisk[4] = vec2[](vec2(-0.94201624, -0.39906216),
-                                     vec2(0.94558609, -0.76890725),
-                                     vec2(-0.094184101, -0.92938870),
-                                     vec2(0.34495938, 0.29387760));
-        
-        float visibility = 1.0;
-        projTexColor = textureProj(projectorTex8, projTextCoord8);
-        for(int i=0; i<4; i++) {
-            if(texture(shadowTex8, tex_coords.xy + poissonDisk[i]/800.0).r < tex_coords.z - shadowBias)
-                visibility -= 0.25;
-        }
-        
-        vec4 color = lightColor * projTexColor;
-        color.x *= visibility;
-        color.y *= visibility;
-        color.z *= visibility;
-        color.w = 1.0;
-        
-        if(color.x < 0)
-            color.x = 0;
-        if(color.y < 0)
-            color.y = 0;
-        if(color.z < 0)
-            color.z = 0;
-        
-        fragColor += color;
-    }
-    else {
-        fragColor += vec4(0.0, 0.0, 0.0, 1.0);
-    }
-}
-
-//nighth projector's variables
-uniform sampler2D shadowTex9;
-uniform sampler2DRect projectorTex9;
-in vec4 projTextCoord9;
-in vec4 shadowTextCoord9;
-in vec3 projectorDirVarying9;
-in vec3 halfVector9;
-in float distVarying9;
-uniform float radius9;
-in float isSetVarying9;
-void drawProjector9() {
-    if(isSetVarying9<=0)
-        return ;
-    
-    vec3 n,halfV;
-    float NdotL, NdotHV;
-    float spotEffect;
-    float att;
-    float shadowBias = 0.0001;
-    vec3 ambientLight = vec3(1.0, 1.0, 1.0);
-    vec3 diffuseLight = vec3(1.0, 1.0, 1.0);
-    vec4 specularLight = vec4(1.0, 1.0, 1.0, 1.0);
-    vec4 lightColor = vec4(1.0, 1.0, 1.0, 1.0);
-    
-    NdotL = max(dot(normalVarying, projectorDirVarying9), 0.0);
-    if(NdotL > 0.0) {
-        if(NdotL < 1.0)
-            NdotL = 1.0;
-        //att = 5000 / (0.1 + 0.1 * distVarying2 + 0.1 * distVarying2 * distVarying2);
-        //att += -5000 / (0.1 + 0.1 * (1000 - distVarying2) + 0.1 * (1000 - distVarying2) * (1000 - distVarying2));
-        att = 1.5 / (1.0 + (2.0 / radius9 * distVarying9) + (1.0 / (radius9 * radius9)) * (distVarying9 * distVarying9));
-        att += -0.5 / (1.0 + (2.0 / radius9 * (1500.0 - distVarying9)) + (1.0 / (radius9 * radius9)) * ((1500.0 - distVarying9) * (1500.0 - distVarying9)));
-        lightColor += att * vec4(NdotL * diffuseLight, 1.0);
-        halfV = normalize(halfVector9);
-        NdotHV = max(dot(normalVarying, halfV), 0.0);
-        float shineness = 1;
-        lightColor += att * specularLight * pow(NdotHV, shineness);
-        
-        vec4 projTexColor;
-        vec3 tex_coords = shadowTextCoord9.xyz / shadowTextCoord9.w;
-        
-        vec2 poissonDisk[4] = vec2[](vec2(-0.94201624, -0.39906216),
-                                     vec2(0.94558609, -0.76890725),
-                                     vec2(-0.094184101, -0.92938870),
-                                     vec2(0.34495938, 0.29387760));
-        
-        float visibility = 1.0;
-        projTexColor = textureProj(projectorTex9, projTextCoord9);
-        for(int i=0; i<4; i++) {
-            if(texture(shadowTex9, tex_coords.xy + poissonDisk[i]/800.0).r < tex_coords.z - shadowBias)
-                visibility -= 0.25;
-        }
-        
-        vec4 color = lightColor * projTexColor;
-        color.x *= visibility;
-        color.y *= visibility;
-        color.z *= visibility;
-        color.w = 1.0;
-        
-        if(color.x < 0)
-            color.x = 0;
-        if(color.y < 0)
-            color.y = 0;
-        if(color.z < 0)
-            color.z = 0;
-        
-        fragColor += color;
-    }
-    else {
-        fragColor += vec4(0.0, 0.0, 0.0, 1.0);
-    }
-}*/
-
 uniform vec3 lightPos;
 in vec3 fragPos;
+uniform float isModelingSelected;
 void basicTexturing() {
     vec3 lightDir = normalize(lightPos - fragPos);
     float diff = max(dot(normalVarying, lightDir), 0.0);
     vec3 lightColor = vec3(0.5, 0.5, 0.5);
+    if(isModelingSelected >= 0.0)
+        lightColor = vec3(0.0, 1.0, 0.0);
     vec3 diffuse = diff * lightColor;
     fragColor = vec4(diffuse, 1.0);
 }
@@ -728,89 +532,18 @@ void basicTexturing() {
 void main() {
     basicTexturing();
     
-    drawProjector1();
-    drawProjector2();
-    drawProjector3();
-    drawProjector4();
-    drawProjector5();
-    drawProjector6();
-    drawProjector7();
+    if(isModelingSelected < 0.0) {
+        drawProjector1();
+        drawProjector2();
+        drawProjector3();
+    }
+    //drawProjector4();
+    //drawProjector5();
+    //drawProjector6();
+    //drawProjector7();
     //drawProjector8();
     //drawProjector9();
 }
-
-
-
-
-/*out vec4 fragColor;
-in vec3 normalVarying;
-
-//first projector's variables
-uniform sampler2D shadowTex;
-uniform sampler2DRect projectorTex;
-in vec4 projTextCoord;
-in vec4 shadowTextCoord;
-in vec3 projectorDirVarying;
-in vec3 halfVector;
-in float distVarying;
-
-void main() {
-    vec3 n,halfV;
-    float NdotL, NdotHV;
-    float spotEffect;
-    float att;
-    vec3 ambientLight = vec3(1.0, 1.0, 1.0);
-    vec3 diffuseLight = vec3(1.0, 1.0, 1.0);
-    vec4 specularLight = vec4(1.0, 1.0, 1.0, 1.0);
-    vec4 lightColor = vec4(1.0, 1.0, 1.0, 1.0);
-    float shadowBias = 0.0001;
-    
-    NdotL = max(dot(normalVarying, projectorDirVarying), 0.0);
-    if(NdotL > 0.0) {
-        att = 5000 / (0.1 + 0.1 * distVarying + 0.1 * distVarying * distVarying);
-        att += -5000 / (0.1 + 0.1 * (1000 - distVarying) + 0.1 * (1000 - distVarying) * (1000 - distVarying));
-        lightColor += att * vec4(NdotL * diffuseLight, 1.0);
-        halfV = normalize(halfVector);
-        NdotHV = max(dot(normalVarying, halfV), 0.0);
-        float shineness = 1;
-        lightColor += att * specularLight * pow(NdotHV, shineness);
-        
-        vec4 projTexColor;
-        vec3 tex_coords = shadowTextCoord.xyz / shadowTextCoord.w;
-        
-        vec2 poissonDisk[4] = vec2[](vec2(-0.94201624, -0.39906216),
-                                     vec2(0.94558609, -0.76890725),
-                                     vec2(-0.094184101, -0.92938870),
-                                     vec2(0.34495938, 0.29387760));
-        
-        float visibility = 1.0;
-        projTexColor = textureProj(projectorTex, projTextCoord);
-        for(int i=0; i<4; i++) {
-            if(texture(shadowTex, tex_coords.xy + poissonDisk[i]/800.0).r < tex_coords.z - shadowBias)
-                visibility -= 0.25;
-        }
-        
-        vec4 color = lightColor * projTexColor;
-        color.x *= visibility;
-        color.y *= visibility;
-        color.z *= visibility;
-        color.w = 1.0;
-        
-        if(color.x < 0)
-            color.x = 0;
-        if(color.y < 0)
-            color.y = 0;
-        if(color.z < 0)
-            color.z = 0;
-        
-        fragColor += color;
-    }
-    else {
-        fragColor += vec4(0.0, 0.0, 0.0, 1.0);
-    }
-}*/
-
-////////////// 응 안돼 //////////////
 
 
 
