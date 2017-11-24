@@ -88,9 +88,33 @@ void MappingApp::draw() {
     if(projector->videoPlayer.isLoaded()) {
         texture.draw(points[0],points[1],points[2],points[3]);
         
-        ofDrawBitmapString("most far distance : " + ofToString(abs(0 - projector->zPos)), 10, 30);
-        ofDrawBitmapString("width : " + ofToString(projector->width), 10, 40);
-        ofDrawBitmapString("height : " + ofToString(projector->height), 10, 50);
+        //ofDrawBitmapString("most far distance : " + ofToString(abs(0 - projector->zPos)), 10, 30);
+        //ofDrawBitmapString("width : " + ofToString(projector->width), 10, 40);
+        //ofDrawBitmapString("height : " + ofToString(projector->height), 10, 50);
+        
+        float xRV = ceil(projector->pivotWidth * abs(0 - projector->yPos) / projector->pivotDistance / 2);
+        float yRV = ceil(projector->pivotHeight * abs(0 - projector->yPos) / projector->pivotDistance / 2);
+        ofVec3f topLeft = ofVec3f(projector->xPos - xRV, projector->yPos + yRV, projector->yPos - abs(0-projector->yPos));
+        ofVec3f topRight = ofVec3f(projector->xPos + xRV, projector->yPos + yRV, projector->yPos - abs(0-projector->yPos));
+        ofVec3f bottomLeft = ofVec3f(projector->xPos - xRV, projector->yPos - yRV, projector->yPos - abs(0-projector->yPos));
+        ofVec3f bottomRight = ofVec3f(projector->xPos + xRV, projector->yPos - yRV, projector->yPos - abs(0-projector->yPos));
+        
+        float w = abs(topLeft.distance(topRight));
+        float h = abs(topLeft.distance(bottomLeft));
+        ofDrawBitmapString("Pivot Distance : " + ofToString(projector->pivotDistance), 400, 30);
+        ofDrawBitmapString("Pivot Width : " + ofToString(projector->pivotWidth), 400, 40);
+        ofDrawBitmapString("Pivot Height : " + ofToString(projector->pivotHeight), 400, 50);
+        ofDrawBitmapString("Distance : " + ofToString(abs(0 - projector->yPos)), 400, 60);
+        ofDrawBitmapString("Width : " + ofToString(w), 400, 70);
+        ofDrawBitmapString("Height : " + ofToString(h), 400, 80);
+        ofDrawBitmapString("Aspect Ratio : " + ofToString(w/h), 400, 90);
+        ofDrawBitmapString("Draw Ratio : " + ofToString(w/abs(0 - projector->yPos)), 400, 100);
+        //ofDrawBitmapString("FOV : " + ofToString(atan(w / 2 / abs(0 - projector->yPos) * 2) * 45), 400, 110);
+        ofDrawBitmapString("FOV : " + ofToString(atan(w / 2 / abs(0 - projector->yPos) * 2)), 400, 110);
+        
+        /*ofLog() << "most far distance : " + ofToString(abs(0 - projector->zPos));
+        ofLog() << "width : " + ofToString(projector->width);
+        ofLog() << "height : " + ofToString(projector->height);*/
         
         /*ofDisableDepthTest();
         drawPanel();
@@ -156,6 +180,9 @@ void MappingApp::keyReleased(int key){
 
 //--------------------------------------------------------------
 void MappingApp::mouseMoved(int x, int y ){
+    if(projector==NULL)
+        return ;
+    
     if(manuClicked) {
         float currentYPos = 30 + manufacturerMenu.getHeight();
         if(x > 10 && x <= 10 + manufacturerMenu.getWidth() * 1.5) {
@@ -190,6 +217,9 @@ void MappingApp::mouseMoved(int x, int y ){
 
 //--------------------------------------------------------------
 void MappingApp::mouseDragged(int x, int y, int button){
+    if(projector==NULL)
+        return ;
+    
     if(panelClickIndex != -1) {
         if(x >= 135 && x <= 135 + 250) {
             if(panelClickIndex==0) {
@@ -230,6 +260,8 @@ void MappingApp::mouseDragged(int x, int y, int button){
 
 //--------------------------------------------------------------
 void MappingApp::mousePressed(int x, int y, int button){
+    if(projector==NULL)
+        return ;
     /*if(projector->videoPlayer.isLoaded() && panelClickIndex == -1) {
         float videoPivotDistance = projector->pivotDistance;
         float videoPivotWidth = projector->pivotWidth;

@@ -15,7 +15,7 @@ int main( ){
     shared_ptr<ofAppBaseWindow> mainWindow = ofCreateWindow(glSet);
     
     glSet.width = 750;
-    glSet.height = 750;
+    glSet.height = 768;
     glSet.setPosition(ofVec2f(1324,300));
     shared_ptr<ofAppBaseWindow> mappingWindow = ofCreateWindow(glSet);
     

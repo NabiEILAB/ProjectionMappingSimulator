@@ -99,6 +99,8 @@ void Projector::draw() {
     //yRadVal = ceil(363 * distance / 1039 / 2);
     xRadVal = ceil(pivotWidth * distance / pivotDistance / 2);
     yRadVal = ceil(pivotHeight * distance / pivotDistance / 2);
+    //xRadVal = ceil(pivotWidth * abs(0 - zPos) / pivotDistance / 2);
+    //yRadVal = ceil(pivotHeight * abs(0 - zPos) / pivotDistance / 2);
     zRadVal = 1;
     
     ofVec3f topLeft = ofVec3f(xPos - (xRadVal), yPos + (yRadVal), zPos - (zRadVal * distance));
@@ -106,10 +108,15 @@ void Projector::draw() {
     ofVec3f bottomLeft = ofVec3f(xPos - (xRadVal), yPos - (yRadVal), zPos - (zRadVal * distance));
     ofVec3f bottomRight = ofVec3f(xPos + (xRadVal), yPos - (yRadVal), zPos - (zRadVal * distance));
     
+    //ofVec3f topLeft = ofVec3f(xPos - (xRadVal), yPos + (yRadVal), zPos - (zRadVal * abs(0 - zPos)));
+    //ofVec3f topRight = ofVec3f(xPos + (xRadVal), yPos + (yRadVal), zPos - (zRadVal * abs(0 - zPos)));
+    //ofVec3f bottomLeft = ofVec3f(xPos - (xRadVal), yPos - (yRadVal), zPos - (zRadVal * abs(0 - zPos)));
+    //ofVec3f bottomRight = ofVec3f(xPos + (xRadVal), yPos - (yRadVal), zPos - (zRadVal * abs(0 - zPos)));
+    
     width = abs(topLeft.distance(topRight));
     height = abs(topLeft.distance(bottomLeft));
     
-    //ofLog() << "Distance : " << abs(-4000 - zPos) << ", Width : " << width << ", Height : " << height << ", Aspect Ratio : " << width/height << ", Throw Ratio : " << distance / width;
+    //ofLog() << "Distance : " << abs(0 - zPos) << ", Width : " << width << ", Height : " << height << ", Aspect Ratio : " << width/height << ", Throw Ratio : " << distance / width;
     
     allocateTextureFbo(width, height);
     textureFbo.begin();
@@ -123,6 +130,7 @@ void Projector::draw() {
         ofDrawRectangle(pt[3].x - 50, pt[3].y, 50, 50);
         ofPopStyle();*/
         copiedTexture.draw(pt[3], pt[2], pt[1], pt[0]);
+        //videoPlayer.draw(0, 0, width, height);
     }
     
     ofPoint points[4];
@@ -154,7 +162,9 @@ void Projector::draw() {
     
     //Projector's projection matrix
     float aspect = float(width/height);
-    projectorProjection = ofMatrix4x4::newPerspectiveMatrix(90, aspect, distance/1000, distance); //need to find a way to calculate proper fov value
+    //projectorProjection = ofMatrix4x4::newPerspectiveMatrix(21, aspect, distance/1000, distance); //need to find a way to calculate proper fov value
+    projectorProjection = ofMatrix4x4::newPerspectiveMatrix(atan(width / 2 / distance) * 2 * 45, aspect, distance/1000, distance);
+    //projectorProjection = ofMatrix4x4::newPerspectiveMatrix(90 / 2 * atan(width / 2 * (distance / 1000)), aspect, distance / 1000, distance);
     
     //0-1 bias matrix
     projectorBias = ofMatrix4x4::newIdentityMatrix();

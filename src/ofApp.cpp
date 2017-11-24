@@ -90,6 +90,10 @@ void ofApp::setup(){
     
     projectorModel.loadModel("projector.3ds");
     reconstructProjectorMesh();
+    
+    //model.loadModel("projector.3ds");
+    //model.setPosition(0, 0, 0);
+    //model.setScale(1, 1, 1);
 }
 
 //--------------------------------------------------------------
@@ -151,13 +155,16 @@ void ofApp::draw(){
         easyCam.setTarget(ofVec3f(x, y, z));
     }
     else {
-        if(!easyCam.getMouseInputEnabled() && panelClickIndex == -1) {
-            ofNode t = easyCam.getTarget();
-            ofVec3f p = easyCam.getPosition();
+        if(!easyCam.getMouseInputEnabled()) {
             easyCam.enableMouseInput();
-            easyCam.reset();
-            easyCam.setPosition(p.x, p.y, p.z);
-            easyCam.setTarget(t);
+            if(panelClickIndex == -1) {
+                ofNode t = easyCam.getTarget();
+                ofVec3f p = easyCam.getPosition();
+                //easyCam.enableMouseInput();
+                easyCam.reset();
+                easyCam.setPosition(p.x, p.y, p.z);
+                easyCam.setTarget(t);
+            }
         }
     }
     
@@ -166,7 +173,13 @@ void ofApp::draw(){
     ofEnableDepthTest();
     
     renderCustomModel();
-
+    
+    //model.drawFaces();
+    /*reconstructMesh();
+    for(int i=0; i<meshes.size(); i++) {
+        meshes[i].draw();
+    }*/
+    
     //render projector modeling
     projectorTextureShader.begin();
     projectorTextureShader.setUniform3f("lightPos", easyCam.getX(), easyCam.getY(), easyCam.getZ());
@@ -344,6 +357,14 @@ void ofApp::mouseDragged(int x, int y, int button){
             }
         }
     }
+    else if(isModelingSelected == 1) {
+        if(panelClickIndex == 6) {
+            float realValue = (float)(x - 120) / 450 * 50;
+            float offset = realValue - model.getScale().x;
+            ofLog() << offset;
+            scaleModeling(offset);
+        }
+    }
 }
 
 //--------------------------------------------------------------
@@ -370,6 +391,7 @@ void ofApp::mousePressed(int x, int y, int button){
             switch(projectorDropDownHoverIndex) {
                 case 0 : {
                     if(currentSelectedProjector != -1) {
+                        easyCam.disableMouseInput();
                         ofFileDialogResult openFileResult = ofSystemLoadDialog("Select Video file");
                         
                         if(openFileResult.bSuccess)
@@ -431,8 +453,11 @@ void ofApp::mousePressed(int x, int y, int button){
             }
             else if(y > ofGetHeight()/2/4*3 && y <= (ofGetHeight()/2 + cameraMoveBackground.getHeight())/4*3) {
                 if(y > (ofGetHeight()/2 + 45)/4*3 && y <= (ofGetHeight()/2 + 45 + cameraButton[2].getHeight())/4*3) {
-                    if(x > 28/4*3 && x <= (28 + cameraButton[2].getWidth())/4*3)
+                    if(x > 28/4*3 && x <= (28 + cameraButton[2].getWidth())/4*3) {
                         cameraButtonPressedIndex = 2;
+                        model.setScale(model.getScale().x + 0.01, model.getScale().x + 0.01, model.getScale().x + 0.01);
+                        reconstructMesh();
+                    }
                     else if(x > 106/4*3 && x <= (106 + cameraButton[2].getWidth())/4*3)
                         cameraButtonPressedIndex = 3;
                     else
@@ -503,6 +528,17 @@ void ofApp::mousePressed(int x, int y, int button){
                 float barLength = 450 * lengthRatio;
                 if(x > 90 + barLength - 10 && x <= 90 + barLength + 10) {
                     panelClickIndex = 5;
+                    easyCam.disableMouseInput();
+                }
+            }
+        }
+        else if(isModelingSelected == 1) {
+            if(y > ofGetHeight() - 95 && y <= ofGetHeight() - 85) {
+                float currentScale = model.getScale().x;
+                float lengthRatio = currentScale / 50;
+                float barLength = 450 * lengthRatio;
+                if(x > 120 + barLength - 10 && x <= 120 + barLength + 10) {
+                    panelClickIndex = 6;
                     easyCam.disableMouseInput();
                 }
             }
@@ -578,11 +614,13 @@ void ofApp::mousePressed(int x, int y, int button){
             }
             case 1 : {
                 //ofLog() << "menu 2";
+                easyCam.disableMouseInput();
                 save();
                 break;
             }
             case 2 : {
                 //ofLog() << "menu 3";
+                easyCam.disableMouseInput();
                 load();
                 break;
             }
@@ -593,6 +631,7 @@ void ofApp::mousePressed(int x, int y, int button){
         switch(subModelingHoverIndex) {
             case 0 : {
                 //ofLog() << "menu 1";
+                easyCam.disableMouseInput();
                 ofFileDialogResult openFileResult = ofSystemLoadDialog("Select 3d file");
                 if(openFileResult.bSuccess) {
                     open3DFile(openFileResult);
@@ -1286,13 +1325,23 @@ void ofApp::drawPanel() {
         ofDrawBitmapString(str, 680, 625);
     }
     else if(isModelingSelected==1) {
-        panelWindow.draw(10, ofGetHeight() - 200, 1000, 190);
+        panelWindow.draw(10, ofGetHeight() - 200, ofGetWidth() - 20, 190);
         
-        ofDrawBitmapString("Modeling Width : ", 20, 600);
-        ofDrawBitmapString("Modeling Height : ", 20, 630);
+        ofDrawBitmapString("Modeling Width : ", ofGetWidth() - 350, ofGetHeight() - 150);
+        ofDrawBitmapString("Modeling Height : ", ofGetWidth() - 350, ofGetHeight() - 140);
         
-        ofDrawBitmapString(ofToString(modelWidth), 550, 600);
-        ofDrawBitmapString(ofToString(modelHeight), 550, 630);
+        ofDrawBitmapString(ofToString(modelWidth), ofGetWidth() - 200, ofGetHeight() - 150);
+        ofDrawBitmapString(ofToString(modelHeight), ofGetWidth() - 200, ofGetHeight() - 140);
+        
+        float currentScale = model.getScale().x;
+        float lengthRatio = (currentScale) / 50;
+        float barLength = 450 * lengthRatio;
+        ofDrawBitmapString("Scale Factor", 20, ofGetHeight() - 85);
+        ofDrawBitmapString(ofToString(currentScale), 575, ofGetHeight() - 85);
+        
+        panelGrayBar.draw(120, ofGetHeight() - 95, 450, 10);
+        panelGreenBar.draw(120, ofGetHeight() - 95, barLength, 10);
+        panelSliderButton.draw(120 + barLength - 10, ofGetHeight() - 100, 20, 20);
     }
 }
 
@@ -1548,15 +1597,15 @@ ofVec3f ofApp::findNearGridPoint(ofPoint mousePt) {
 int ofApp::findNearProjectorIndex(ofPoint mousePt) {
     float nearestDistance = 50;
     int nearestIndex = -1;
-    /*if(model.getMeshCount()!=0) {
+    if(model.getMeshCount()!=0) {
         ofVec3f modelPt = easyCam.worldToScreen(model.getPosition());
         float distance = modelPt.distance(mousePt);
         if(distance < 100) {
-            ofLog() << distance;
+            //ofLog() << distance;
             isModelingSelected *= -1;
             return nearestIndex;
         }
-    }*/
+    }
     for(int i=0; i<projectors.size(); i++) {
         ofVec3f projectorPt = easyCam.worldToScreen(ofVec3f(projectors[i]->xPos, projectors[i]->yPos, projectors[i]->zPos));
         float distance = projectorPt.distance(mousePt);
@@ -1572,83 +1621,6 @@ int ofApp::findNearProjectorIndex(ofPoint mousePt) {
 }
 
 void ofApp::scaleModeling(float factor) {
-    model.setPosition(0, 0, 0);
-    int currentScale = model.getScale().x;
-    model.setScale(factor/currentScale, factor/currentScale, factor/currentScale);
-    ofLog() << model.getScale();
-    
-    float leftestX = 3000;
-    float rightestX = -3000;
-    float highestY = -3000;
-    float lowestY = 3000;
-    float closestZ = -3000;
-    
-    for(int i = 0; i < model.getMeshCount(); i++) {
-        ofMatrix4x4 modelMatrix = model.getModelMatrix();
-        ofMatrix4x4 meshMatrix = model.getMeshHelper(i).matrix;
-        ofMatrix4x4 concatMatrix;
-        concatMatrix.preMult(modelMatrix);
-        concatMatrix.preMult(meshMatrix);
-
-        //Reconstruct mesh's vertices and normals from the model object
-        for(int j=0; j<meshes[i].getNumVertices(); j++) {
-            ofVec3f& vert = meshes[i].getVertices()[j];
-            vert.set(concatMatrix.preMult(vert));
-            ofVec3f& norm = meshes[i].getNormals()[j];
-            norm.set(0, 0, 0);
-            
-            if(vert.x < leftestX)
-                leftestX = vert.x;
-            if(vert.x > rightestX)
-                rightestX = vert.x;
-            if(vert.y > highestY)
-                highestY = vert.y;
-            if(vert.y < lowestY)
-                lowestY = vert.y;
-            if(vert.z > closestZ)
-                closestZ = vert.z;
-        }
-        
-        modelWidth = abs(rightestX - leftestX);
-        modelHeight = abs(highestY - lowestY);
-        
-        ofLog() << modelWidth;
-        ofLog() << modelHeight;
-        
-        //Reconstruct normal vector
-        for(int j = 0; j < meshes[i].getIndices().size(); j += 3) {
-            int aIndex = meshes[i].getIndices()[j];
-            int bIndex = meshes[i].getIndices()[j + 1];
-            int cIndex = meshes[i].getIndices()[j + 2];
-            
-            ofVec3f offset1 = meshes[i].getVertices()[aIndex] - meshes[i].getVertices()[bIndex];
-            ofVec3f offset2 = meshes[i].getVertices()[cIndex] - meshes[i].getVertices()[bIndex];
-            ofVec3f normalValue = offset2.cross(offset1);
-            
-            meshes[i].getNormals()[aIndex] += normalValue;
-            meshes[i].getNormals()[bIndex] += normalValue;
-            meshes[i].getNormals()[cIndex] += normalValue;
-        }
-        
-        model.setPosition(-leftestX,-lowestY,-closestZ);
-        //model.setPosition(0, -lowestY, -closestZ);
-    }
-    
-    /*for(int i = 0; i < model.getMeshCount(); i++) {
-        //DO AGAIN
-        ofMatrix4x4 modelMatrix = model.getModelMatrix();
-        ofMatrix4x4 meshMatrix = model.getMeshHelper(i).matrix;
-        ofMatrix4x4 concatMatrix2;
-        concatMatrix2.preMult(modelMatrix);
-        concatMatrix2.preMult(meshMatrix);
-        for(int j = 0; j < meshes[i].getNumVertices(); j++) {
-            //translate vertices and normals
-            ofVec3f& vert = meshes[i].getVertices()[j];
-            vert += ofVec3f(-leftestX, -lowestY, -closestZ);
-            //vert += ofVec3f(0, -lowestY, -closestZ);
-            ofVec3f& norm = meshes[i].getNormals()[j];
-            norm += ofVec3f(-leftestX, -lowestY, -closestZ);
-            //norm += ofVec3f(0, -lowestY, -closestZ);
-        }
-    }*/
+    model.setScale(model.getScale().x + factor, model.getScale().x + factor, model.getScale().x + factor);
+    reconstructMesh();
 }
