@@ -7,6 +7,7 @@
 //
 
 #define DEG2RAD 3.141592f/180.0;
+#define RAD2DEG 180.0/3.141592f;
 
 #include "Projector.h"
 
@@ -162,9 +163,8 @@ void Projector::draw() {
     
     //Projector's projection matrix
     float aspect = float(width/height);
-    //projectorProjection = ofMatrix4x4::newPerspectiveMatrix(21, aspect, distance/1000, distance); //need to find a way to calculate proper fov value
-    projectorProjection = ofMatrix4x4::newPerspectiveMatrix(atan(width / 2 / distance * 2) * 45, aspect, distance/1000, distance);
-    //projectorProjection = ofMatrix4x4::newPerspectiveMatrix(90 / 2 * atan(width / 2 * (distance / 1000)), aspect, distance / 1000, distance);
+    float fov = 2 * atan(height / (2 * distance)) * RAD2DEG;
+    projectorProjection = ofMatrix4x4::newPerspectiveMatrix(fov, aspect, distance / 1000, distance);
     
     //0-1 bias matrix
     projectorBias = ofMatrix4x4::newIdentityMatrix();
