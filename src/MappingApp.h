@@ -23,6 +23,7 @@ public :
     ofPoint realCenterPt;
     int leftX,rightX,upY,downY;
     
+    //Load resources
     ofImage panelWindow;
     ofImage panelGrayBar;
     ofImage panelGreenBar;
@@ -51,7 +52,6 @@ public :
     ofImage bottomMenuHover;
     ofImage check;
     
-    //MappingApp(Projector* projector);
     void setup();
     void update();
     void draw();

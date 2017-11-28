@@ -48,6 +48,7 @@ class ofApp : public ofBaseApp{
         ofShader textureProjectionShader;
         ofShader depthStoringShader;
         ofShader projectorTextureShader;
+        ofShader modelingBasicShader;
     
         //Window Pointers
         shared_ptr<ofAppBaseWindow> mappingWindow;
@@ -97,7 +98,9 @@ class ofApp : public ofBaseApp{
         void refreshGUI();
         void addProjector(float x, float y, float z);
         void deleteProjector(int projectorNum);
+        void settingCameraPosition();
         void renderCustomModel();
+        void renderProjectorModel();
         void open3DFile(ofFileDialogResult openFileResult);
         void open3DFile(string url);
         void reconstructMesh();

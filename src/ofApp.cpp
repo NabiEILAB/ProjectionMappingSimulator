@@ -3,29 +3,28 @@
 //--------------------------------------------------------------
 void ofApp::setup(){
     ofBackground(70,70,70);
-    ofEnableDepthTest(); //draw in order of z value
+    ofEnableDepthTest(); //draw things in z value order
     
-    //allocating new projector class - 3 projectors only due to the performance issue
+    //allocating new projector class - 7 projectors only due to the performance issue
     projectors.push_back(new Projector(0, 0, 0, 0, 0, 0, projectors.size()));
     projectors.push_back(new Projector(0, 0, 0, 0, 0, 0, projectors.size()));
     projectors.push_back(new Projector(0, 0, 0, 0, 0, 0, projectors.size()));
-    //projectors.push_back(new Projector(0, 0, 0, 0, 0, 0, projectors.size()));
-    //projectors.push_back(new Projector(0, 0, 0, 0, 0, 0, projectors.size()));
-    //projectors.push_back(new Projector(0, 0, 0, 0, 0, 0, projectors.size()));
-    //projectors.push_back(new Projector(0, 0, 0, 0, 0, 0, projectors.size()));
-    //projectors.push_back(new Projector(300,20,850,0,0,0,projectors.size()));
-    //projectors.push_back(new Projector(400,20,850,0,0,0,projectors.size()));
+    projectors.push_back(new Projector(0, 0, 0, 0, 0, 0, projectors.size()));
+    projectors.push_back(new Projector(0, 0, 0, 0, 0, 0, projectors.size()));
+    projectors.push_back(new Projector(0, 0, 0, 0, 0, 0, projectors.size()));
+    projectors.push_back(new Projector(0, 0, 0, 0, 0, 0, projectors.size()));
     
     for(int i=0; i<projectors.size(); i++)
         projectors[i]->setup();
     
-    //camera set
+    //maximum camera rendering limit
     easyCam.setFarClip(12000);
     
     //load shaders
     textureProjectionShader.load("TextureProjection");
     depthStoringShader.load("DepthStoring");
     projectorTextureShader.load("ProjectorTexture");
+    modelingBasicShader.load("ModelingBasic");
     
     currentSelectedProjector = -1;
     isModelingSelected = -1;
@@ -90,10 +89,6 @@ void ofApp::setup(){
     
     projectorModel.loadModel("projector.3ds");
     reconstructProjectorMesh();
-    
-    //model.loadModel("projector.3ds");
-    //model.setPosition(0, 0, 0);
-    //model.setScale(1, 1, 1);
 }
 
 //--------------------------------------------------------------
@@ -106,111 +101,19 @@ void ofApp::update(){
 void ofApp::draw(){
     easyCam.begin();
     
-    if(cameraButtonPressedIndex==0) {
-        easyCam.disableMouseInput();
-        easyCam.dolly(-10);
-    }
-    else if(cameraButtonPressedIndex==1) {
-        easyCam.disableMouseInput();
-        easyCam.dolly(10);
-    }
-    else if(cameraButtonPressedIndex==2) {
-        easyCam.disableMouseInput();
-        //easyCam.move(-10, 0, 0);
-        //easyCam.setTarget(ofVec3f(easyCam.getTarget().getX() - 10,easyCam.getTarget().getY(), easyCam.getTarget().getZ()));
-        easyCam.move(easyCam.getSideDir() * -10);
-        float x = easyCam.getTarget().getX() - easyCam.getSideDir().x * 10;
-        float y = easyCam.getTarget().getY() - easyCam.getSideDir().y * 10;
-        float z = easyCam.getTarget().getZ() - easyCam.getSideDir().z * 10;
-        easyCam.setTarget(ofVec3f(x,y,z));
-    }
-    else if(cameraButtonPressedIndex==3) {
-        easyCam.disableMouseInput();
-        //easyCam.move(10, 0, 0);
-        //easyCam.setTarget(ofVec3f(easyCam.getTarget().getX() + 10,easyCam.getTarget().getY(), easyCam.getTarget().getZ()));
-        easyCam.move(easyCam.getSideDir() * 10);
-        float x = easyCam.getTarget().getX() + easyCam.getSideDir().x * 10;
-        float y = easyCam.getTarget().getY() + easyCam.getSideDir().y * 10;
-        float z = easyCam.getTarget().getZ() + easyCam.getSideDir().z * 10;
-        easyCam.setTarget(ofVec3f(x, y, z));
-    }
-    else if(cameraButtonPressedIndex==4) {
-        easyCam.disableMouseInput();
-        //easyCam.move(0, 10, 0);
-        //easyCam.setTarget(ofVec3f(easyCam.getTarget().getX(), easyCam.getTarget().getY() + 10, easyCam.getTarget().getZ()));
-        easyCam.move(easyCam.getUpDir() * 10);
-        float x = easyCam.getTarget().getX() + easyCam.getUpDir().x * 10;
-        float y = easyCam.getTarget().getY() + easyCam.getUpDir().y * 10;
-        float z = easyCam.getTarget().getZ() + easyCam.getUpDir().z * 10;
-        easyCam.setTarget(ofVec3f(x, y, z));
-    }
-    else if(cameraButtonPressedIndex==5) {
-        easyCam.disableMouseInput();
-        //easyCam.move(0, -10, 0);
-        //easyCam.setTarget(ofVec3f(easyCam.getTarget().getX(), easyCam.getTarget().getY() - 10, easyCam.getTarget().getZ()));
-        easyCam.move(easyCam.getUpDir() * -10);
-        float x = easyCam.getTarget().getX() - easyCam.getUpDir().x * 10;
-        float y = easyCam.getTarget().getY() - easyCam.getUpDir().y * 10;
-        float z = easyCam.getTarget().getZ() - easyCam.getUpDir().z * 10;
-        easyCam.setTarget(ofVec3f(x, y, z));
-    }
-    else {
-        if(!easyCam.getMouseInputEnabled()) {
-            easyCam.enableMouseInput();
-            if(panelClickIndex == -1) {
-                ofNode t = easyCam.getTarget();
-                ofVec3f p = easyCam.getPosition();
-                //easyCam.enableMouseInput();
-                easyCam.reset();
-                easyCam.setPosition(p.x, p.y, p.z);
-                easyCam.setTarget(t);
-            }
-        }
-    }
+    settingCameraPosition();
     
     ofDisableDepthTest();
     ofDrawGrid(200, 15, true, false, true, false);
     ofEnableDepthTest();
     
     renderCustomModel();
-    
-    //model.drawFaces();
-    /*reconstructMesh();
-    for(int i=0; i<meshes.size(); i++) {
-        meshes[i].draw();
-    }*/
-    
-    //render projector modeling
-    projectorTextureShader.begin();
-    projectorTextureShader.setUniform3f("lightPos", easyCam.getX(), easyCam.getY(), easyCam.getZ());
-    for(int i=0; i<projectors.size(); i++) {
-        if(projectors[i]->isSetted) {
-            projectorModel.setScale(0.3, 0.3, 0.3);
-            projectorModel.setPosition(projectors[i]->xPos, projectors[i]->yPos, projectors[i]->zPos);
-            projectorModel.setRotation(0, -projectors[i]->xRotation, 1, 0, 0);
-            projectorModel.setRotation(1, -projectors[i]->yRotation, 0, 1, 0);
-            projectorModel.setRotation(2, projectors[i]->zRotation + 180, 0, 0, 1);
-            reconstructProjectorMesh();
-            
-            ofMatrix4x4 mat = ofMatrix4x4::newIdentityMatrix();
-            mat.translate(projectors[i]->xPos, projectors[i]->yPos, projectors[i]->zPos);
-            //mat.rotate(-180, 0, 0, 1);
-            projectorTextureShader.setUniformMatrix4f("modelMatrix", mat);
-            projectorTextureShader.setUniform1f("isSelected", 0.0);
-            projectorMesh.draw();
-            if(projectors[i]->isSelected) {
-                projectorModel.setScale(0.301, 0.301, 0.301);
-                reconstructProjectorMesh();
-                projectorTextureShader.setUniform1f("isSelected", 1.0);
-                projectorMesh.drawWireframe();
-            }
-        }
-    }
-    projectorTextureShader.end();
+    renderProjectorModel();
     
     easyCam.end();
     
     ofDisableDepthTest();
+    ofEnableBlendMode(OF_BLENDMODE_ALPHA);
     //gui.draw();
     drawPanel();
     drawButtons();
@@ -218,6 +121,7 @@ void ofApp::draw(){
     
     drawHeaders();
     drawDropDownMenus();
+    ofDisableBlendMode();
 }
 
 //--------------------------------------------------------------
@@ -260,38 +164,7 @@ void ofApp::mouseMoved(int x, int y ){
     }
     
     switch(headerHoverIndex) {
-        /*case 0 : {
-            float currentYPos = 20 + headerMenu[0].getHeight();
-            if(x > ofGetWidth() - 200 && x <= ofGetWidth() - 200 + subMenuFile[0].getWidth()) {
-                for(int i=0; i<sizeof(subFileHover)/sizeof(subFileHover[0]); i++) {
-                    subFileHoverIndex = -1;
-                    if(y > currentYPos && y <= currentYPos + subMenuFile[i].getHeight()) {
-                        subFileHoverIndex = i;
-                        break;
-                    }
-                    currentYPos += subMenuFile[i].getHeight();
-                }
-            }
-            else
-                subFileHoverIndex = -1;
-            break;
-        }
-        case 1 : {
-            float currentYPos = 20 + headerMenu[0].getHeight();
-            if(x > ofGetWidth() - 200 && x <= ofGetWidth() - 200 + subMenuFile[0].getWidth()) {
-                for(int i=0; i<sizeof(subModelingHover)/sizeof(subModelingHover[0]); i++) {
-                    subModelingHoverIndex = -1;
-                    if(y > currentYPos && y <= currentYPos + subMenuModeling[i].getHeight()) {
-                        subModelingHoverIndex = i;
-                        break;
-                    }
-                    currentYPos += subMenuModeling[i].getHeight();
-                }
-            }
-            else
-                subModelingHoverIndex = -1;
-            break;
-        }*/
+        //resized resource version (original size to 3/4)
         case 0 : {
             float currentYPos = 20 + headerMenu[0].getHeight()/4*3;
             if(x > ofGetWidth() - 200 && x <= ofGetWidth() - 200 + subMenuFile[0].getWidth()/4*3) {
@@ -361,7 +234,6 @@ void ofApp::mouseDragged(int x, int y, int button){
         if(panelClickIndex == 6) {
             float realValue = (float)(x - 120) / 450 * 50;
             float offset = realValue - model.getScale().x;
-            ofLog() << offset;
             scaleModeling(offset);
         }
     }
@@ -409,37 +281,6 @@ void ofApp::mousePressed(int x, int y, int button){
             isProjectorDropDownOn = false;
         }
         else {
-            /*if(y > ofGetHeight()/2 - 200 && y <= ofGetHeight()/2 - 200 + cameraZoomBackground.getHeight()) {
-                if(x > 56 && x <= 56 + 56) {
-                    if(y > ofGetHeight()/2 - 192 && y <= ofGetHeight()/2 - 192 + 72)
-                        cameraButtonPressedIndex = 0;
-                    else if(y > ofGetHeight()/2 - 192 + 72 && y <= ofGetHeight()/2 - 192 + (72 * 2))
-                        cameraButtonPressedIndex = 1;
-                    else
-                        cameraButtonPressedIndex = -1;
-                }
-            }
-            else if(y > ofGetHeight()/2 && y <= ofGetHeight()/2 + cameraMoveBackground.getHeight()) {
-                if(y > ofGetHeight()/2 + 45 && y <= ofGetHeight()/2 + 45 + cameraButton[2].getHeight()) {
-                    if(x > 28 && x <= 28 + cameraButton[2].getWidth())
-                        cameraButtonPressedIndex = 2;
-                    else if(x > 106 && x <= 106 + cameraButton[2].getWidth())
-                        cameraButtonPressedIndex = 3;
-                    else
-                        cameraButtonPressedIndex = -1;
-                }
-                else if(x > 67 && x <= 67 + cameraButton[2].getWidth()) {
-                    if(y > ofGetHeight()/2 + 5 && y <= ofGetHeight()/2 + 5 + cameraButton[2].getHeight())
-                        cameraButtonPressedIndex = 4;
-                    else if(y > ofGetHeight()/2 + 81 && y <= ofGetHeight()/2 + 81 + cameraButton[2].getHeight())
-                        cameraButtonPressedIndex = 5;
-                    else
-                        cameraButtonPressedIndex = -1;
-                }
-                else
-                    cameraButtonPressedIndex = -1;
-            }*/
-            
             //3/4 version
             if(y > (ofGetHeight()/2 - 200)/4*3 && y <= (ofGetHeight()/2 - 200 + cameraZoomBackground.getHeight())/4*3) {
                 if(x > 56/4*3 && x <= (56 + 56)/4*3) {
@@ -569,24 +410,6 @@ void ofApp::mousePressed(int x, int y, int button){
             }
         }
         
-        
-        /*if(y > 20 && y <= 20 + headerMenu[0].getHeight()) {
-            for(int i = 0; i < sizeof(headerHover)/sizeof(headerHover[0]); i++) {
-                headerHoverIndex = -1;
-                if(i != 0) {
-                    if(x > ofGetWidth() - 200 + headerMenu[i-1].getWidth() && x <= ofGetWidth() - 200 + headerMenu[i-1].getWidth() + headerMenu[i].getWidth()) {
-                        headerHoverIndex = i;
-                        break;
-                    }
-                }
-                else {
-                    if(x > ofGetWidth() - 200 && x <= ofGetWidth() - 200 + headerMenu[i].getWidth()) {
-                        headerHoverIndex = i;
-                        break;
-                    }
-                }
-            }
-        }*/
         if(y > 20 && y <= 20 + (headerMenu[0].getHeight())/4*3) { //3/4 version
             for(int i = 0; i < sizeof(headerHover)/sizeof(headerHover[0]); i++) {
                 headerHoverIndex = -1;
@@ -633,10 +456,9 @@ void ofApp::mousePressed(int x, int y, int button){
                 //ofLog() << "menu 1";
                 easyCam.disableMouseInput();
                 ofFileDialogResult openFileResult = ofSystemLoadDialog("Select 3d file");
-                if(openFileResult.bSuccess) {
+                if(openFileResult.bSuccess)
                     open3DFile(openFileResult);
-                    subModelingHoverIndex = -1;
-                }
+                subModelingHoverIndex = -1;
                 break;
             }
         }
@@ -665,6 +487,7 @@ void ofApp::mousePressed(int x, int y, int button){
             if(isModelingSelected == 1) {
                 if(currentSelectedProjector != -1)
                     projectors[currentSelectedProjector]->isSelected = false;
+                currentSelectedProjector = -1;
                 mappingGUI->projector = NULL;
             }
         }
@@ -742,7 +565,7 @@ void ofApp::addProjector(float x, float y, float z) {
                 projectors[currentSelectedProjector]->isSelected = false;
             projectors[i]->activate(x, y, z);
             currentSelectedProjector = i;
-            mappingGUI->setProjector(projectors[currentSelectedProjector]);
+            //mappingGUI->setProjector(projectors[currentSelectedProjector]);
             break;
         }
     }
@@ -754,12 +577,120 @@ void ofApp::deleteProjector(int projectorNum) {
     refreshGUI();
 }
 
+void ofApp::settingCameraPosition() {
+    if(cameraButtonPressedIndex==0) {
+        easyCam.disableMouseInput();
+        easyCam.dolly(-10);
+    }
+    else if(cameraButtonPressedIndex==1) {
+        easyCam.disableMouseInput();
+        easyCam.dolly(10);
+    }
+    else if(cameraButtonPressedIndex==2) {
+        easyCam.disableMouseInput();
+        easyCam.move(easyCam.getSideDir() * -10);
+        float x = easyCam.getTarget().getX() - easyCam.getSideDir().x * 10;
+        float y = easyCam.getTarget().getY() - easyCam.getSideDir().y * 10;
+        float z = easyCam.getTarget().getZ() - easyCam.getSideDir().z * 10;
+        easyCam.setTarget(ofVec3f(x,y,z));
+    }
+    else if(cameraButtonPressedIndex==3) {
+        easyCam.disableMouseInput();
+        easyCam.move(easyCam.getSideDir() * 10);
+        float x = easyCam.getTarget().getX() + easyCam.getSideDir().x * 10;
+        float y = easyCam.getTarget().getY() + easyCam.getSideDir().y * 10;
+        float z = easyCam.getTarget().getZ() + easyCam.getSideDir().z * 10;
+        easyCam.setTarget(ofVec3f(x, y, z));
+    }
+    else if(cameraButtonPressedIndex==4) {
+        easyCam.disableMouseInput();
+        easyCam.move(easyCam.getUpDir() * 10);
+        float x = easyCam.getTarget().getX() + easyCam.getUpDir().x * 10;
+        float y = easyCam.getTarget().getY() + easyCam.getUpDir().y * 10;
+        float z = easyCam.getTarget().getZ() + easyCam.getUpDir().z * 10;
+        easyCam.setTarget(ofVec3f(x, y, z));
+    }
+    else if(cameraButtonPressedIndex==5) {
+        easyCam.disableMouseInput();
+        easyCam.move(easyCam.getUpDir() * -10);
+        float x = easyCam.getTarget().getX() - easyCam.getUpDir().x * 10;
+        float y = easyCam.getTarget().getY() - easyCam.getUpDir().y * 10;
+        float z = easyCam.getTarget().getZ() - easyCam.getUpDir().z * 10;
+        easyCam.setTarget(ofVec3f(x, y, z));
+    }
+    else {
+        if(!easyCam.getMouseInputEnabled()) {
+            easyCam.enableMouseInput();
+            if(panelClickIndex == -1) {
+                ofNode t = easyCam.getTarget();
+                ofVec3f p = easyCam.getPosition();
+                //easyCam.enableMouseInput();
+                easyCam.reset();
+                easyCam.setPosition(p.x, p.y, p.z);
+                easyCam.setTarget(t);
+            }
+        }
+    }
+}
+
 void ofApp::renderCustomModel() {
+    /////////////////////// 1. Make Modeling render scene in FBO ///////////////////////
+    ofFbo fbo;
+    ofFbo::Settings settings;
+    settings.width = ofGetWidth();
+    settings.height = ofGetHeight();
+    settings.textureTarget = GL_TEXTURE_2D;
+    settings.internalformat = GL_RGBA32F_ARB;
+    settings.useDepth = true;
+    settings.depthStencilAsTexture = true;
+    settings.useStencil = true;
+    fbo.allocate(settings);
+    
+    fbo.begin();
+    ofClear(0);
+    ofSetColor(255,255,255,255);
+    //fbo.getTexture().draw(0,0);
+    glClear(GL_DEPTH_BUFFER_BIT);
+    
+    easyCam.end();
+    ofDisableDepthTest();
+    ofBackground(70,70,70);
+    ofDrawGrid(200, 15, true, false, true, false);
+    ofEnableDepthTest();
+    easyCam.begin();
+    
+    ofMatrix4x4 modelMatrix = ofMatrix4x4::newIdentityMatrix();
+    modelMatrix.translate(0, 0, 0);
+    
+    modelingBasicShader.begin();
+    modelingBasicShader.setUniformMatrix4f("modelMatrix", modelMatrix);
+    modelingBasicShader.setUniform3f("lightPos", easyCam.getX(), easyCam.getY(), easyCam.getZ());
+    modelingBasicShader.setUniform1f("isModelingSelected", (float)isModelingSelected);
+    
+    easyCam.end();
+    for(int j=0; j<meshes.size(); j++)
+        meshes[j].draw();
+    easyCam.begin();
+    
+    
+    modelingBasicShader.end();
+    fbo.end();
+    ////////////////////////////////////////////////////////////////////////////////////
+    
+    
+    
+    
+    /////////////////////// 2. Make projection mapping render scene in each projector's FBO ///////////////////////
     for(int i=0; i<projectors.size(); i++) {
-        projectors[i]->draw();
+        if(projectors[i]->isSetted)
+            projectors[i]->draw();
+        
+        if(!projectors[i]->videoPlayer.isLoaded())
+            continue;
+        
+        /////////////////////// 2-1. Make 'Shadow Map' as Texture ///////////////////////
         projectors[i]->shadowFbo.begin();
         projectors[i]->clearShadowFbo();
-        
         depthStoringShader.begin();
         depthStoringShader.setUniformMatrix4f("projectorProjectionMatrix", projectors[i]->projectorProjection);
         depthStoringShader.setUniformMatrix4f("projectorViewMatrix", projectors[i]->projectorView);
@@ -776,26 +707,83 @@ void ofApp::renderCustomModel() {
         depthStoringShader.end();
         projectors[i]->shadowFbo.end();
         
+        /////////////////////// 2-2. Make 'Projection Mapping scene' in FBO ///////////////////////
         setProjectorShader(i);
+        
+        projectors[i]->allocateResultFbo();
+        projectors[i]->resultFbo.begin();
+        projectors[i]->clearResultFbo();
+        
+        textureProjectionShader.begin();
+        modelMatrix = ofMatrix4x4::newIdentityMatrix();
+        modelMatrix.translate(0, 0, 0);
+    
+        ofMatrix4x4 bias = ofMatrix4x4::newIdentityMatrix();
+        bias.scale(0.5, 0.5, 0.5);
+        bias.translate(0.5, 0.5, 0.5);
+    
+        textureProjectionShader.setUniformMatrix4f("biasMatrix", bias);
+        textureProjectionShader.setUniformMatrix4f("modelMatrix", modelMatrix);
+        
+        easyCam.end();
+        for(int j=0; j<meshes.size(); j++)
+            meshes[j].draw();
+        easyCam.begin();
+        
+        textureProjectionShader.end();
+        projectors[i]->resultFbo.end();
     }
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////
     
-    textureProjectionShader.begin();
-    ofMatrix4x4 modelMatrix = ofMatrix4x4::newIdentityMatrix();
-    modelMatrix.translate(0, 0, 0);
     
-    ofMatrix4x4 bias = ofMatrix4x4::newIdentityMatrix();
-    bias.scale(0.5, 0.5, 0.5);
-    bias.translate(0.5, 0.5, 0.5);
     
-    textureProjectionShader.setUniformMatrix4f("biasMatrix", bias);
-    textureProjectionShader.setUniformMatrix4f("modelMatrix", modelMatrix);
-    textureProjectionShader.setUniform3f("lightPos", easyCam.getX(), easyCam.getY(), easyCam.getZ());
-    textureProjectionShader.setUniform1f("isModelingSelected", (float)isModelingSelected);
-    //ofLog() << currentSelectedProjector;
     
-    for(int j=0; j<meshes.size(); j++)
-        meshes[j].draw();
-    textureProjectionShader.end();
+    /////////////////////// 3. Blend whole FBOs ///////////////////////
+    if(model.getMeshCount() > 0) {
+        easyCam.end();
+        ofDisableDepthTest();
+        fbo.draw(0,0);
+        fbo.clear();
+        ofEnableBlendMode(OF_BLENDMODE_ADD);
+        
+        for(int i=0; i<projectors.size(); i++)
+        if(projectors[i]->isSetted && projectors[i]->videoPlayer.isLoaded())
+            projectors[i]->resultFbo.draw(0,0);
+        ofDisableBlendMode();
+    
+        ofEnableDepthTest();
+        easyCam.begin();
+    }
+    /////////////////////////////////////////////////////////////////
+}
+
+void ofApp::renderProjectorModel() {
+    projectorTextureShader.begin();
+    projectorTextureShader.setUniform3f("lightPos", easyCam.getX(), easyCam.getY(), easyCam.getZ());
+    for(int i=0; i<projectors.size(); i++) {
+        if(projectors[i]->isSetted) {
+            projectorModel.setScale(0.3, 0.3, 0.3);
+            projectorModel.setPosition(projectors[i]->xPos, projectors[i]->yPos, projectors[i]->zPos);
+            projectorModel.setRotation(0, -projectors[i]->xRotation, 1, 0, 0);
+            projectorModel.setRotation(1, -projectors[i]->yRotation, 0, 1, 0);
+            projectorModel.setRotation(2, projectors[i]->zRotation + 180, 0, 0, 1);
+            reconstructProjectorMesh();
+            
+            ofMatrix4x4 mat = ofMatrix4x4::newIdentityMatrix();
+            mat.translate(projectors[i]->xPos, projectors[i]->yPos, projectors[i]->zPos);
+            //mat.rotate(-180, 0, 0, 1);
+            projectorTextureShader.setUniformMatrix4f("modelMatrix", mat);
+            projectorTextureShader.setUniform1f("isSelected", 0.0);
+            projectorMesh.draw();
+            if(projectors[i]->isSelected) {
+                projectorModel.setScale(0.301, 0.301, 0.301);
+                reconstructProjectorMesh();
+                projectorTextureShader.setUniform1f("isSelected", 1.0);
+                projectorMesh.drawWireframe();
+            }
+        }
+    }
+    projectorTextureShader.end();
 }
 
 void ofApp::open3DFile(ofFileDialogResult openFileResult) {
@@ -968,124 +956,13 @@ void ofApp::openVideoFile(ofFileDialogResult openFileResult) {
 
 void ofApp::setProjectorShader(int index) {
     textureProjectionShader.begin();
-    if(index==0){
-        textureProjectionShader.setUniformMatrix4f("projectorMatrix1", projectors[index]->projectorMatrix);
-        textureProjectionShader.setUniformMatrix4f("projectorProjectionMatrix1", projectors[index]->projectorProjection);
-        textureProjectionShader.setUniformMatrix4f("projectorViewMatrix1", projectors[index]->projectorView);
-        textureProjectionShader.setUniform3f("projectorPos1", projectors[index]->xPos, projectors[index]->yPos, projectors[index]->zPos);
-        textureProjectionShader.setUniformTexture("projectorTex1", projectors[index]->textureFbo.getTexture(), 16);
-        textureProjectionShader.setUniformTexture("shadowTex1", projectors[index]->shadowFbo.getDepthTexture(), 17);
-        textureProjectionShader.setUniform1f("radius1", projectors[index]->height); //radius att test!
-        if(projectors[index]->isSetted && projectors[index]->videoPlayer.isLoaded()) {
-            textureProjectionShader.setUniform1f("isSet1",1);
-        }
-        else
-            textureProjectionShader.setUniform1f("isSet1",0);
-    }
-    else if(index==1) {
-        textureProjectionShader.setUniformMatrix4f("projectorMatrix2", projectors[index]->projectorMatrix);
-        textureProjectionShader.setUniformMatrix4f("projectorProjectionMatrix2", projectors[index]->projectorProjection);
-        textureProjectionShader.setUniformMatrix4f("projectorViewMatrix2", projectors[index]->projectorView);
-        textureProjectionShader.setUniform3f("projectorPos2", projectors[index]->xPos, projectors[index]->yPos, projectors[index]->zPos);
-        textureProjectionShader.setUniformTexture("projectorTex2", projectors[index]->textureFbo.getTexture(), 14);
-        textureProjectionShader.setUniformTexture("shadowTex2", projectors[index]->shadowFbo.getDepthTexture(), 15);
-        textureProjectionShader.setUniform1f("radius2", projectors[index]->height);
-        if(projectors[index]->isSetted && projectors[index]->videoPlayer.isLoaded())
-            textureProjectionShader.setUniform1f("isSet2",1);
-        else
-            textureProjectionShader.setUniform1f("isSet2",0);
-    }
-    else if(index==2) {
-        textureProjectionShader.setUniformMatrix4f("projectorMatrix3", projectors[index]->projectorMatrix);
-        textureProjectionShader.setUniformMatrix4f("projectorProjectionMatrix3", projectors[index]->projectorProjection);
-        textureProjectionShader.setUniformMatrix4f("projectorViewMatrix3", projectors[index]->projectorView);
-        textureProjectionShader.setUniform3f("projectorPos3", projectors[index]->xPos, projectors[index]->yPos, projectors[index]->zPos);
-        textureProjectionShader.setUniformTexture("projectorTex3", projectors[index]->textureFbo.getTexture(), 12);
-        textureProjectionShader.setUniformTexture("shadowTex3", projectors[index]->shadowFbo.getDepthTexture(), 13);
-        textureProjectionShader.setUniform1f("radius3", projectors[index]->height);
-        if(projectors[index]->isSetted && projectors[index]->videoPlayer.isLoaded())
-            textureProjectionShader.setUniform1f("isSet3",1);
-        else
-            textureProjectionShader.setUniform1f("isSet3",0);
-    }
-    /*else if(index==3) {
-        textureProjectionShader.setUniformMatrix4f("projectorMatrix4", projectors[index]->projectorMatrix);
-        textureProjectionShader.setUniformMatrix4f("projectorProjectionMatrix4", projectors[index]->projectorProjection);
-        textureProjectionShader.setUniformMatrix4f("projectorViewMatrix4", projectors[index]->projectorView);
-        textureProjectionShader.setUniform3f("projectorPos4", projectors[index]->xPos, projectors[index]->yPos, projectors[index]->zPos);
-        textureProjectionShader.setUniformTexture("projectorTex4", projectors[index]->textureFbo.getTexture(), 10);
-        textureProjectionShader.setUniformTexture("shadowTex4", projectors[index]->shadowFbo.getDepthTexture(), 11);
-        textureProjectionShader.setUniform1f("radius4", projectors[index]->height);
-        if(projectors[index]->isSetted && projectors[index]->videoPlayer.isLoaded())
-            textureProjectionShader.setUniform1f("isSet4",1);
-        else
-            textureProjectionShader.setUniform1f("isSet4",0);
-    }
-    else if(index==4) {
-        textureProjectionShader.setUniformMatrix4f("projectorMatrix5", projectors[index]->projectorMatrix);
-        textureProjectionShader.setUniformMatrix4f("projectorProjectionMatrix5", projectors[index]->projectorProjection);
-        textureProjectionShader.setUniformMatrix4f("projectorViewMatrix5", projectors[index]->projectorView);
-        textureProjectionShader.setUniform3f("projectorPos5", projectors[index]->xPos, projectors[index]->yPos, projectors[index]->zPos);
-        textureProjectionShader.setUniformTexture("projectorTex5", projectors[index]->textureFbo.getTexture(), 8);
-        textureProjectionShader.setUniformTexture("shadowTex5", projectors[index]->shadowFbo.getDepthTexture(), 9);
-        textureProjectionShader.setUniform1f("radius5", projectors[index]->height);
-        if(projectors[index]->isSetted && projectors[index]->videoPlayer.isLoaded())
-            textureProjectionShader.setUniform1f("isSet5",1);
-        else
-            textureProjectionShader.setUniform1f("isSet5",0);
-    }
-    else if(index==5) {
-        textureProjectionShader.setUniformMatrix4f("projectorMatrix6", projectors[index]->projectorMatrix);
-        textureProjectionShader.setUniformMatrix4f("projectorProjectionMatrix6", projectors[index]->projectorProjection);
-        textureProjectionShader.setUniformMatrix4f("projectorViewMatrix6", projectors[index]->projectorView);
-        textureProjectionShader.setUniform3f("projectorPos6", projectors[index]->xPos, projectors[index]->yPos, projectors[index]->zPos);
-        textureProjectionShader.setUniformTexture("projectorTex6", projectors[index]->textureFbo.getTexture(), 6);
-        textureProjectionShader.setUniformTexture("shadowTex6", projectors[index]->shadowFbo.getDepthTexture(), 7);
-        textureProjectionShader.setUniform1f("radius6", projectors[index]->height);
-        if(projectors[index]->isSetted && projectors[index]->videoPlayer.isLoaded())
-            textureProjectionShader.setUniform1f("isSet6",1);
-        else
-            textureProjectionShader.setUniform1f("isSet6",0);
-    }
-    else if(index==6) {
-        textureProjectionShader.setUniformMatrix4f("projectorMatrix7", projectors[index]->projectorMatrix);
-        textureProjectionShader.setUniformMatrix4f("projectorProjectionMatrix7", projectors[index]->projectorProjection);
-        textureProjectionShader.setUniformMatrix4f("projectorViewMatrix7", projectors[index]->projectorView);
-        textureProjectionShader.setUniform3f("projectorPos7", projectors[index]->xPos, projectors[index]->yPos, projectors[index]->zPos);
-        textureProjectionShader.setUniformTexture("projectorTex7", projectors[index]->textureFbo.getTexture(), 4);
-        textureProjectionShader.setUniformTexture("shadowTex7", projectors[index]->shadowFbo.getDepthTexture(), 5);
-        textureProjectionShader.setUniform1f("radius7", projectors[index]->height);
-        if(projectors[index]->isSetted && projectors[index]->videoPlayer.isLoaded())
-            textureProjectionShader.setUniform1f("isSet7",1);
-        else
-            textureProjectionShader.setUniform1f("isSet7",0);
-    }
-    else if(index==7) {
-        textureProjectionShader.setUniformMatrix4f("projectorMatrix8", projectors[index]->projectorMatrix);
-        textureProjectionShader.setUniformMatrix4f("projectorProjectionMatrix8", projectors[index]->projectorProjection);
-        textureProjectionShader.setUniformMatrix4f("projectorViewMatrix8", projectors[index]->projectorView);
-        textureProjectionShader.setUniform3f("projectorPos8", projectors[index]->xPos, projectors[index]->yPos, projectors[index]->zPos);
-        textureProjectionShader.setUniformTexture("projectorTex8", projectors[index]->textureFbo.getTexture(), 2);
-        textureProjectionShader.setUniformTexture("shadowTex8", projectors[index]->shadowFbo.getDepthTexture(), 3);
-        textureProjectionShader.setUniform1f("radius8", projectors[index]->height);
-        if(projectors[index]->isSetted && projectors[index]->videoPlayer.isLoaded())
-            textureProjectionShader.setUniform1f("isSet8",1);
-        else
-            textureProjectionShader.setUniform1f("isSet8",0);
-    }
-    else if(index==8) {
-        textureProjectionShader.setUniformMatrix4f("projectorMatrix9", projectors[index]->projectorMatrix);
-        textureProjectionShader.setUniformMatrix4f("projectorProjectionMatrix9", projectors[index]->projectorProjection);
-        textureProjectionShader.setUniformMatrix4f("projectorViewMatrix9", projectors[index]->projectorView);
-        textureProjectionShader.setUniform3f("projectorPos9", projectors[index]->xPos, projectors[index]->yPos, projectors[index]->zPos);
-        textureProjectionShader.setUniformTexture("projectorTex9", projectors[index]->textureFbo.getTexture(), 0);
-        textureProjectionShader.setUniformTexture("shadowTex9", projectors[index]->shadowFbo.getDepthTexture(), 1);
-        textureProjectionShader.setUniform1f("radius9", projectors[index]->height);
-        if(projectors[index]->isSetted && projectors[index]->videoPlayer.isLoaded())
-            textureProjectionShader.setUniform1f("isSet9",1);
-        else
-            textureProjectionShader.setUniform1f("isSet9",0);
-     }*/
+    textureProjectionShader.setUniformMatrix4f("projectorMatrix", projectors[index]->projectorMatrix);
+    textureProjectionShader.setUniformMatrix4f("projectorProjectionMatrix", projectors[index]->projectorProjection);
+    textureProjectionShader.setUniformMatrix4f("projectorViewMatrix", projectors[index]->projectorView);
+    textureProjectionShader.setUniform3f("projectorPos", projectors[index]->xPos, projectors[index]->yPos, projectors[index]->zPos);
+    textureProjectionShader.setUniformTexture("projectorTex", projectors[index]->textureFbo.getTexture(), 0);
+    textureProjectionShader.setUniformTexture("shadowTex", projectors[index]->shadowFbo.getDepthTexture(), 1);
+    textureProjectionShader.setUniform1f("radius", projectors[index]->height); //radius att test!
     textureProjectionShader.end();
 }
 
@@ -1109,117 +986,78 @@ void ofApp::drawDropDownMenus() {
 }
 
 void ofApp::drawButtons() {
-    //cameraZoomBackground.draw(50, ofGetHeight()/2 - 200);
     cameraZoomBackground.draw(50/4*3, (ofGetHeight()/2 - 200)/4*3, cameraZoomBackground.getWidth()/4*3, cameraZoomBackground.getHeight()/4*3);
     
     for(int i=0; i<2; i++) {
-        if(cameraButtonPressedIndex == i) {
-            //cameraButtonPressed[i].draw(56, ofGetHeight()/2 - 192 + (72 * i), 56, 56);
+        if(cameraButtonPressedIndex == i)
             cameraButtonPressed[i].draw(56/4*3, (ofGetHeight()/2 - 192 + (72 * i))/4*3, 56/4*3, 56/4*3);
-        }
-        else {
-            //cameraButton[i].draw(56, ofGetHeight()/2 - 192 + (72 * i), 56, 56);
+        else
             cameraButton[i].draw(56/4*3, (ofGetHeight()/2 - 192 + (72 * i))/4*3, 56/4*3, 56/4*3);
-        }
     }
     
-    //cameraMoveBackground.draw(23, ofGetHeight()/2);
     cameraMoveBackground.draw(23/4*3, (ofGetHeight()/2)/4*3, cameraMoveBackground.getWidth()/4*3, cameraMoveBackground.getHeight()/4*3);
     
-    if(cameraButtonPressedIndex == 2) {//LEFT
-        //cameraButtonPressed[2].draw(28, ofGetHeight()/2 + 45);
+    if(cameraButtonPressedIndex == 2) //LEFT
         cameraButtonPressed[2].draw(28/4*3, (ofGetHeight()/2 + 45)/4*3, cameraButtonPressed[2].getWidth()/4*3, cameraButtonPressed[2].getHeight()/4*3);
-    }
-    else {
-        //cameraButton[2].draw(28, ofGetHeight()/2 + 45);
+    else
         cameraButton[2].draw(28/4*3, (ofGetHeight()/2 + 45)/4*3, cameraButton[2].getWidth()/4*3, cameraButton[2].getHeight()/4*3);
-    }
     
-    if(cameraButtonPressedIndex == 3) {//RIGHT
-        //cameraButtonPressed[3].draw(106, ofGetHeight()/2 + 45);
+    if(cameraButtonPressedIndex == 3) //RIGHT
         cameraButtonPressed[3].draw(106/4*3, (ofGetHeight()/2 + 45)/4*3, cameraButtonPressed[3].getWidth()/4*3, cameraButtonPressed[3].getHeight()/4*3);
-    }
-    else {
-        //cameraButton[3].draw(106, ofGetHeight()/2 + 45);
+    else
         cameraButton[3].draw(106/4*3, (ofGetHeight()/2 + 45)/4*3, cameraButton[3].getWidth()/4*3, cameraButton[3].getHeight()/4*3);
-    }
     
-    if(cameraButtonPressedIndex == 4) { //UP
-        //cameraButtonPressed[4].draw(67, ofGetHeight()/2 + 5);
+    if(cameraButtonPressedIndex == 4) //UP
         cameraButtonPressed[4].draw(67/4*3, (ofGetHeight()/2 + 5)/4*3, cameraButtonPressed[4].getWidth()/4*3, cameraButtonPressed[4].getHeight()/4*3);
-    }
-    else {
-        //cameraButton[4].draw(67, ofGetHeight()/2 + 5);
+    else
         cameraButton[4].draw(67/4*3, (ofGetHeight()/2 + 5)/4*3, cameraButton[4].getWidth()/4*3, cameraButton[4].getHeight()/4*3);
-    }
     
-    if(cameraButtonPressedIndex == 5) {// DOWN
-        //cameraButtonPressed[5].draw(67, ofGetHeight()/2 + 81);
+    if(cameraButtonPressedIndex == 5) // DOWN
         cameraButtonPressed[5].draw(67/4*3, (ofGetHeight()/2 + 81)/4*3, cameraButtonPressed[5].getWidth()/4*3, cameraButtonPressed[5].getHeight()/4*3);
-    }
-    else {
-        //cameraButton[5].draw(67/4*3, (ofGetHeight()/2 + 81)/4*3);
+    else
         cameraButton[5].draw(67/4*3, (ofGetHeight()/2 + 81)/4*3, cameraButton[5].getWidth()/4*3, cameraButton[5].getHeight()/4*3);
-    }
 }
 
 void ofApp::drawHeaders() {
     for(int i = 0; i < sizeof(headerMenu)/sizeof(headerMenu[0]); i++) {
         if(headerHoverIndex == i) {
-            if(i != 0) {
-                //headerHover[i].draw(ofGetWidth() - 200 + headerHover[i-1].getWidth(), 20);
+            if(i != 0)
                 headerHover[i].draw(ofGetWidth() - 200 + (headerHover[i-1].getWidth())/4*3, 20, headerHover[i].getWidth()/4*3, headerHover[i].getHeight()/4*3);
-            }
-            else {
-                //headerHover[i].draw(ofGetWidth() - 200, 20);
+            else
                 headerHover[i].draw(ofGetWidth() - 200, 20, headerHover[i].getWidth()/4*3, headerHover[i].getHeight()/4*3);
-            }
         }
         else {
-            if(i != 0) {
-                //headerMenu[i].draw(ofGetWidth() - 200 + headerMenu[i-1].getWidth(), 20);
+            if(i != 0)
                 headerMenu[i].draw(ofGetWidth() - 200 + (headerMenu[i-1].getWidth())/4*3, 20, headerMenu[i].getWidth()/4*3, headerMenu[i].getHeight()/4*3);
-            }
-            else {
-                //headerMenu[i].draw(ofGetWidth() - 200, 20);
+            else
                 headerMenu[i].draw(ofGetWidth() - 200, 20, headerMenu[i].getWidth()/4*3, headerMenu[i].getHeight()/4*3);
-            }
         }
     }
     
     switch(headerHoverIndex) {
         case 0 : {
-            //float currentYPos = 20 + headerMenu[0].getHeight();
             float currentYPos = 20 + (headerMenu[0].getHeight())/4*3;
             for(int i = 0; i < sizeof(subMenuFile)/sizeof(subMenuFile[0]); i++) {
                 if(subFileHoverIndex==i) {
-                    //subFileHover[i].draw(ofGetWidth() - 200, currentYPos);
                     subFileHover[i].draw(ofGetWidth() - 200, currentYPos, subFileHover[i].getWidth()/4*3, subFileHover[i].getHeight()/4*3);
-                    //currentYPos += subFileHover[i].getHeight();
                     currentYPos += subFileHover[i].getHeight()/4*3;
                 }
                 else {
                     subMenuFile[i].draw(ofGetWidth() - 200, currentYPos, subMenuFile[i].getWidth()/4*3, subMenuFile[i].getHeight()/4*3);
-                    //currentYPos += subMenuFile[i].getHeight();
                     currentYPos += subMenuFile[i].getHeight()/4*3;
                 }
             }
             break;
         }
         case 1 : {
-            //float currentYPos = 20 + headerMenu[0].getHeight();
             float currentYPos = 20 + (headerMenu[0].getHeight())/4*3;
             for(int i = 0; i < sizeof(subMenuModeling)/sizeof(subMenuModeling[0]); i++) {
                 if(subModelingHoverIndex==i) {
-                    //subModelingHover[i].draw(ofGetWidth() - 200, currentYPos);
                     subModelingHover[i].draw(ofGetWidth() - 200, currentYPos, subModelingHover[i].getWidth()/4*3, subModelingHover[i].getHeight()/4*3);
-                    //currentYPos += subModelingHover[i].getHeight();
                     currentYPos += subModelingHover[i].getHeight()/4*3;
                 }
                 else {
-                    //subMenuModeling[i].draw(ofGetWidth() - 200, currentYPos);
                     subMenuModeling[i].draw(ofGetWidth() - 200, currentYPos, subMenuModeling[i].getWidth()/4*3, subMenuModeling[i].getHeight()/4*3);
-                    //currentYPos += subMenuModeling[i].getHeight();
                     currentYPos += subModelingHover[i].getHeight()/4*3;
                 }
             }
@@ -1356,37 +1194,6 @@ void ofApp::save() {
         else
             textFile << currentModelURL << endl;
         for(int i=0; i<projectors.size(); i++) {
-            /*if(projectors[i]->isSetted) {
-                textFile << projectors[i]->xPos << endl;
-                textFile << projectors[i]->yPos << endl;
-                textFile << projectors[i]->zPos << endl;
-                textFile << projectors[i]->xRotation << endl;
-                textFile << projectors[i]->yRotation << endl;
-                textFile << projectors[i]->zRotation << endl;
-                textFile << projectors[i]->pt[0].x << endl;
-                textFile << projectors[i]->pt[0].y << endl;
-                textFile << projectors[i]->pt[1].x << endl;
-                textFile << projectors[i]->pt[1].y << endl;
-                textFile << projectors[i]->pt[2].x << endl;
-                textFile << projectors[i]->pt[2].y << endl;
-                textFile << projectors[i]->pt[3].x << endl;
-                textFile << projectors[i]->pt[3].y << endl;
-                if(!projectors[i]->isMappingOn) {
-                    textFile << "not mapped" << endl;
-                }
-                else {
-                    textFile << "mapped" << endl;
-                }
-                if(projectors[i]->videoPlayer.isLoaded()) {
-                    textFile << projectors[i]->currentVideoURL << endl;
-                }
-                else {
-                    textFile << "no video" << endl;
-                }
-            }
-            else {
-                textFile << "not setted" << endl;
-            }*/
             if(projectors[i]->isSetted) {
                 textFile << i << ',';
                 textFile << projectors[i]->xPos << ',' << projectors[i]->yPos << ',' << projectors[i]->zPos << ',';
@@ -1490,90 +1297,6 @@ void ofApp::load() {
             if(str.compare("mapped") == 0)
                 projectors[index]->isMappingOn = true;
         }
-        
-        //open3DFile(openFileResult);
-        /*textFile.open(loadFileResult.getPath(), ofFile::ReadOnly);
-        buffer = textFile.readToBuffer();
-        str = ofSplitString(buffer.getText(), "\n")[currentLine];
-        
-        if(str.compare("no modeling") != 0)
-            open3DFile(str);
-        currentLine++;
-        for(int i=0; i<projectors.size(); i++) {
-            str = ofSplitString(buffer.getText(), "\n")[currentLine];
-            if(str.compare("not setted") != 0) {
-                projectors[i]->isSetted = true;
-                
-                str = ofSplitString(buffer.getText(), "\n")[currentLine];
-                projectors[i]->xPos = stof(str);
-                currentLine++;
-                
-                str = ofSplitString(buffer.getText(), "\n")[currentLine];
-                projectors[i]->yPos = stof(str);
-                currentLine++;
-                
-                str = ofSplitString(buffer.getText(), "\n")[currentLine];
-                projectors[i]->zPos = stof(str);
-                currentLine++;
-                
-                str = ofSplitString(buffer.getText(), "\n")[currentLine];
-                projectors[i]->xRotation = stof(str);
-                currentLine++;
-                
-                str = ofSplitString(buffer.getText(), "\n")[currentLine];
-                projectors[i]->yRotation = stof(str);
-                currentLine++;
-                
-                str = ofSplitString(buffer.getText(), "\n")[currentLine];
-                projectors[i]->zRotation = stof(str);
-                currentLine++;
-                
-                str = ofSplitString(buffer.getText(), "\n")[currentLine];
-                projectors[i]->pt[0].x = stof(str);
-                currentLine++;
-                
-                str = ofSplitString(buffer.getText(), "\n")[currentLine];
-                projectors[i]->pt[0].y = stof(str);
-                currentLine++;
-                
-                str = ofSplitString(buffer.getText(), "\n")[currentLine];
-                projectors[i]->pt[1].x = stof(str);
-                currentLine++;
-                
-                str = ofSplitString(buffer.getText(), "\n")[currentLine];
-                projectors[i]->pt[1].y = stof(str);
-                currentLine++;
-                
-                str = ofSplitString(buffer.getText(), "\n")[currentLine];
-                projectors[i]->pt[2].x = stof(str);
-                currentLine++;
-                
-                str = ofSplitString(buffer.getText(), "\n")[currentLine];
-                projectors[i]->pt[2].y = stof(str);
-                currentLine++;
-                
-                str = ofSplitString(buffer.getText(), "\n")[currentLine];
-                projectors[i]->pt[3].x = stof(str);
-                currentLine++;
-                
-                str = ofSplitString(buffer.getText(), "\n")[currentLine];
-                projectors[i]->pt[3].y = stof(str);
-                currentLine++;
-                
-                str = ofSplitString(buffer.getText(), "\n")[currentLine];
-                if(str.compare("not mapped")!=0)
-                    projectors[i]->isMappingOn = true;
-                currentLine++;
-                
-                str = ofSplitString(buffer.getText(), "\n")[currentLine];
-                if(str.compare("no video")!=0) {
-                    projectors[i]->currentVideoURL = str;
-                    projectors[i]->videoPlayer.load(str);
-                    projectors[i]->videoPlayer.play();
-                }
-            }
-            currentLine++;
-        }*/
     }
     textFile.close();
 }
@@ -1601,7 +1324,6 @@ int ofApp::findNearProjectorIndex(ofPoint mousePt) {
         ofVec3f modelPt = easyCam.worldToScreen(model.getPosition());
         float distance = modelPt.distance(mousePt);
         if(distance < 100) {
-            //ofLog() << distance;
             isModelingSelected *= -1;
             return nearestIndex;
         }

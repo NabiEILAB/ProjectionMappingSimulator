@@ -64,12 +64,14 @@ void Projector::setup() {
     isSelected = false;
     isMappingOn = false;
     
-    pivotWidth = 580;
-    pivotHeight = 363;
-    pivotDistance = 1039;
+    pivotWidth = 1600;
+    pivotHeight = 900;
+    pivotDistance = 1000;
     
     manufacturerName = "";
     modelName = "";
+    
+    filter.load("Lenna.png");
 }
 
 void Projector::update() {
@@ -85,7 +87,6 @@ void Projector::draw() {
     ofPushStyle();
     
     ofSetColor(255,255,255);
-    //ofDrawBitmapString("No." + ofToString(projectorNum) + " Projector (" + ofToString(xPos) + ", " + ofToString(yPos) + ", " + ofToString(zPos) + ")", xPos, yPos + 20, zPos);
     
     ofTranslate(xPos,yPos,zPos);
     ofRotate(xRotation,1,0,0);
@@ -93,15 +94,11 @@ void Projector::draw() {
     ofRotate(zRotation,0,0,1);
     ofTranslate(-xPos,-yPos,-zPos);
     
-    //Depth limit. if vertex's z value is far more than left operand('-4000' in this case) then, texturing won't come up
-    float distance = abs(-4000 - zPos); //calculate between -2000 and zPos.
+    //Depth limit. if vertex's z value is far more than left operand('-3000' in this case) then, texturing won't come up
+    float distance = abs(-3000 - zPos); //calculate between -3000 and zPos.
     
-    //xRadVal = ceil(580 * distance / 1039 / 2);
-    //yRadVal = ceil(363 * distance / 1039 / 2);
     xRadVal = ceil(pivotWidth * distance / pivotDistance / 2);
     yRadVal = ceil(pivotHeight * distance / pivotDistance / 2);
-    //xRadVal = ceil(pivotWidth * abs(0 - zPos) / pivotDistance / 2);
-    //yRadVal = ceil(pivotHeight * abs(0 - zPos) / pivotDistance / 2);
     zRadVal = 1;
     
     ofVec3f topLeft = ofVec3f(xPos - (xRadVal), yPos + (yRadVal), zPos - (zRadVal * distance));
@@ -109,15 +106,8 @@ void Projector::draw() {
     ofVec3f bottomLeft = ofVec3f(xPos - (xRadVal), yPos - (yRadVal), zPos - (zRadVal * distance));
     ofVec3f bottomRight = ofVec3f(xPos + (xRadVal), yPos - (yRadVal), zPos - (zRadVal * distance));
     
-    //ofVec3f topLeft = ofVec3f(xPos - (xRadVal), yPos + (yRadVal), zPos - (zRadVal * abs(0 - zPos)));
-    //ofVec3f topRight = ofVec3f(xPos + (xRadVal), yPos + (yRadVal), zPos - (zRadVal * abs(0 - zPos)));
-    //ofVec3f bottomLeft = ofVec3f(xPos - (xRadVal), yPos - (yRadVal), zPos - (zRadVal * abs(0 - zPos)));
-    //ofVec3f bottomRight = ofVec3f(xPos + (xRadVal), yPos - (yRadVal), zPos - (zRadVal * abs(0 - zPos)));
-    
     width = abs(topLeft.distance(topRight));
     height = abs(topLeft.distance(bottomLeft));
-    
-    //ofLog() << "Distance : " << abs(0 - zPos) << ", Width : " << width << ", Height : " << height << ", Aspect Ratio : " << width/height << ", Throw Ratio : " << distance / width;
     
     allocateTextureFbo(width, height);
     textureFbo.begin();
@@ -131,7 +121,12 @@ void Projector::draw() {
         ofDrawRectangle(pt[3].x - 50, pt[3].y, 50, 50);
         ofPopStyle();*/
         copiedTexture.draw(pt[3], pt[2], pt[1], pt[0]);
-        //videoPlayer.draw(0, 0, width, height);
+        
+        //filtering test
+        /*ofEnableAlphaBlending();
+        ofSetColor(255,255,255,100);
+        filter.getTexture().draw(pt[3],pt[2],pt[1],pt[0]);
+        ofDisableAlphaBlending();*/
     }
     
     ofPoint points[4];
@@ -139,8 +134,9 @@ void Projector::draw() {
     centerPt.x = width/2; centerPt.y = height/2;
     textureFbo.end();
     
-    //Make matrices for Projective Texturing
-    //Projector's view matrix
+    ////////Make matrices for Projective Texturing Mapping
+    
+    // 1. Projector's view matrix
     ofVec3f projectorPos = ofVec3f(xPos, yPos, zPos);
     float sx, sy, sz, cx, cy, cz, theta;
     theta = xRotation * DEG2RAD;
@@ -161,18 +157,18 @@ void Projector::draw() {
     
     projectorView.makeLookAtViewMatrix(projectorPos, projectorTarget, projectorUp);
     
-    //Projector's projection matrix
+    // 2. Projector's projection matrix
     float aspect = float(width/height);
     float fov = 2 * atan(height / (2 * distance)) * RAD2DEG;
     projectorProjection = ofMatrix4x4::newPerspectiveMatrix(fov, aspect, distance / 1000, distance);
     
-    //0-1 bias matrix
+    // 3. 0-1 bias matrix
     projectorBias = ofMatrix4x4::newIdentityMatrix();
-    projectorBias.scale(ofVec3f(0.5, -0.5, 0.5)); //coordinate origin inversed.
+    projectorBias.scale(ofVec3f(0.5, -0.5, 0.5)); //coordinate origin is inversed(0,0 is at left-down).
     projectorBias.translate(ofVec3f(0.5, 0.5, 0.5));
     projectorBias.scale(ofVec3f(width, height, 1));
     
-    //Projector matrix
+    //multiply whole matrices
     projectorMatrix = projectorView * projectorProjection * projectorBias;
     
     ofPopStyle();
@@ -181,8 +177,10 @@ void Projector::draw() {
 
 void Projector::allocateShadowFbo() {
     ofFbo::Settings settings;
-    settings.width = 1024;
-    settings.height = 768;
+    //settings.width = 1024;
+    //settings.height = 768;
+    settings.width = ofGetWidth();
+    settings.height = ofGetHeight();
     settings.textureTarget = GL_TEXTURE_2D;
     settings.internalformat = GL_RGBA32F_ARB;
     settings.useDepth = true;
@@ -201,6 +199,19 @@ void Projector::allocateTextureFbo(int width, int height) {
     textureFbo.allocate(settings);
 }
 
+void Projector::allocateResultFbo() {
+    ofFbo::Settings settings;
+    settings.width = ofGetWidth();
+    settings.height = ofGetHeight();
+    settings.textureTarget = GL_TEXTURE_2D;
+    settings.internalformat = GL_RGBA32F_ARB;
+    settings.useDepth = true;
+    settings.depthStencilAsTexture = true;
+    settings.useStencil = true;
+    
+    resultFbo.allocate(settings);
+}
+
 void Projector::clearShadowFbo() {
     ofClear(0);
     ofSetColor(255);
@@ -212,6 +223,13 @@ void Projector::clearTextureFbo() {
     ofClear(0);
     ofSetColor(255);
     textureFbo.getTexture().draw(0,0);
+    glClear(GL_DEPTH_BUFFER_BIT);
+}
+
+void Projector::clearResultFbo() {
+    ofClear(0);
+    ofSetColor(255,255,255,0);
+    resultFbo.getTexture().draw(0,0);
     glClear(GL_DEPTH_BUFFER_BIT);
 }
 

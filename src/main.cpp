@@ -16,6 +16,7 @@ int main( ){
     
     glSet.width = 750;
     glSet.height = 768;
+    glSet.decorated = false; //removes window border
     glSet.setPosition(ofVec2f(1324,300));
     shared_ptr<ofAppBaseWindow> mappingWindow = ofCreateWindow(glSet);
     

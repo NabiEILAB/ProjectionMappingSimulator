@@ -54,16 +54,7 @@ void MappingApp::setup() {
             if(ofSplitString(specList[i],",")[0].compare(ofSplitString(specList[i-1],",")[0])!=0)
                manufacturerNameList.push_back(ofSplitString(specList[i],",")[0]);
         }
-        /*if(i!=0 && ofSplitString(specList[i],",")[0].compare("Barco")==0) {
-            ofLog() << ofSplitString(specList[i],",")[1];
-            ofLog() << ofSplitString(specList[i],",")[2];
-            ofLog() << ofSplitString(specList[i],",")[3];
-            ofLog() << ofSplitString(specList[i],",")[4];
-        }*/
     }
-    
-    /*for(int i=0; i<manufacturerNameList.size(); i++)
-        ofLog() << manufacturerNameList[i];*/
 }
 
 void MappingApp::update() {
@@ -88,10 +79,6 @@ void MappingApp::draw() {
     if(projector->videoPlayer.isLoaded()) {
         texture.draw(points[0],points[1],points[2],points[3]);
         
-        //ofDrawBitmapString("most far distance : " + ofToString(abs(0 - projector->zPos)), 10, 30);
-        //ofDrawBitmapString("width : " + ofToString(projector->width), 10, 40);
-        //ofDrawBitmapString("height : " + ofToString(projector->height), 10, 50);
-        
         float xRV = ceil(projector->pivotWidth * abs(0 - projector->yPos) / projector->pivotDistance / 2);
         float yRV = ceil(projector->pivotHeight * abs(0 - projector->yPos) / projector->pivotDistance / 2);
         ofVec3f topLeft = ofVec3f(projector->xPos - xRV, projector->yPos + yRV, projector->yPos - abs(0-projector->yPos));
@@ -109,23 +96,11 @@ void MappingApp::draw() {
         ofDrawBitmapString("Height : " + ofToString(h), 400, 80);
         ofDrawBitmapString("Aspect Ratio : " + ofToString(w/h), 400, 90);
         ofDrawBitmapString("Draw Ratio : " + ofToString(w/abs(0 - projector->yPos)), 400, 100);
-        //ofDrawBitmapString("FOV : " + ofToString(atan(w / 2 / abs(0 - projector->yPos) * 2) * 45), 400, 110);
-        ofDrawBitmapString("FOV : " + ofToString(atan(w / 2 / abs(0 - projector->yPos) * 2)), 400, 110);
-        
-        /*ofLog() << "most far distance : " + ofToString(abs(0 - projector->zPos));
-        ofLog() << "width : " + ofToString(projector->width);
-        ofLog() << "height : " + ofToString(projector->height);*/
+        ofDrawBitmapString("FOV : " + ofToString(atan(h / (2 * abs(0 - projector->yPos))) * (180.0 / 3.141592f)), 400, 110);
         
         /*ofDisableDepthTest();
         drawPanel();
         ofEnableDepthTest();*/
-        
-        /*ofPushStyle();
-        ofNoFill();
-        ofSetColor(0, 255, 0);
-        ofDrawCurve(leftX, upY + 50, leftX, upY, rightX/2, upY + 150, rightX, upY + 50);
-        ofDrawCurve(leftX + 300, upY, leftX, upY, leftX, downY, leftX + 300, downY);
-        ofPopStyle();*/
     }
     
     ofPushStyle();

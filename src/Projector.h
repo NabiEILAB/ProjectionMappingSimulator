@@ -23,9 +23,9 @@ public :
     ofParameter<float> zRotation;
     
     //Radiation value of projector's light. - this is a debug value
-    float xRadVal = 1;
-    float yRadVal = 1.6;
-    float zRadVal = 1;
+    float xRadVal;
+    float yRadVal;
+    float zRadVal;
     
     int projectorNum;
     bool isSetted;
@@ -52,10 +52,14 @@ public :
     //Projector's FBO (FBO contains shadow map and video scene as texture)
     ofFbo shadowFbo;
     ofFbo textureFbo;
+    ofFbo resultFbo;
     
     //Projector's product data
     string manufacturerName;
     string modelName;
+    
+    //filter test
+    ofImage filter;
     
     Projector();
     Projector(float xPos, float yPos, float zPos);
@@ -66,8 +70,10 @@ public :
     void draw();
     void allocateShadowFbo();
     void allocateTextureFbo(int width, int height);
+    void allocateResultFbo();
     void clearShadowFbo();
     void clearTextureFbo();
+    void clearResultFbo();
     void activate(float xPos, float yPos, float zPos);
     void deactivate();
 };
