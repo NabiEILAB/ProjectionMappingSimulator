@@ -71,7 +71,7 @@ void Projector::setup() {
     manufacturerName = "";
     modelName = "";
     
-    filter.load("Lenna.png");
+    //filter.load("Lenna.png");
 }
 
 void Projector::update() {

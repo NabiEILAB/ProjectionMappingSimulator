@@ -23,13 +23,14 @@ class ofApp : public ofBaseApp{
 		void windowResized(int w, int h);
 		void dragEvent(ofDragInfo dragInfo);
 		void gotMessage(ofMessage msg);
+        void exit();
 		
     //Additional variables & functions
     public :
         //Easy Camera
         ofEasyCam easyCam;
     
-        //GUI panel variables
+        //GUI panel variables (currently, replaced ofPanel with custom resource panel)
         ofxPanel gui;
         ofParameterGroup projectorPanelGroup;
     
@@ -71,7 +72,11 @@ class ofApp : public ofBaseApp{
         ofImage cameraMoveBackground;
         ofImage cameraButton[6];
         ofImage cameraButtonPressed[6];
+        ofImage cameraMenu;
+        ofImage cameraMenuClicked;
         int cameraButtonPressedIndex;
+        bool isTranslateMode;
+        bool isCameraMenuClicked;
     
         ofImage headerMenu[2];
         ofImage headerHover[2];
@@ -94,6 +99,7 @@ class ofApp : public ofBaseApp{
         int currentSelectedProjector;
         int isModelingSelected;
         string currentModelURL;
+        bool exiting;
     
         void refreshGUI();
         void addProjector(float x, float y, float z);
@@ -116,4 +122,5 @@ class ofApp : public ofBaseApp{
         ofVec3f findNearGridPoint(ofPoint mousePt);
         int findNearProjectorIndex(ofPoint mousePt);
         void scaleModeling(float factor);
+        void closeApp(ofEventArgs& args);
 };

@@ -10,6 +10,7 @@ int main( ){
     
     glSet.width = 1024;
     glSet.height = 768;
+    glSet.resizable = false;
     glSet.setGLVersion(3, 2);
     glSet.setPosition(ofVec2f(300,300));
     shared_ptr<ofAppBaseWindow> mainWindow = ofCreateWindow(glSet);

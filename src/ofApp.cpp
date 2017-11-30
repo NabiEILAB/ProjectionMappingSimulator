@@ -5,7 +5,8 @@ void ofApp::setup(){
     ofBackground(70,70,70);
     ofEnableDepthTest(); //draw things in z value order
     
-    //allocating new projector class - 7 projectors only due to the performance issue
+    //allocating new projector class - 7 projectors only, due to the performance issue
+    //                                (still, leave it as dynamic vector form, just in case)
     projectors.push_back(new Projector(0, 0, 0, 0, 0, 0, projectors.size()));
     projectors.push_back(new Projector(0, 0, 0, 0, 0, 0, projectors.size()));
     projectors.push_back(new Projector(0, 0, 0, 0, 0, 0, projectors.size()));
@@ -17,14 +18,15 @@ void ofApp::setup(){
     for(int i=0; i<projectors.size(); i++)
         projectors[i]->setup();
     
-    //maximum camera rendering limit
+    //maximum camera rendering distance limit
     easyCam.setFarClip(12000);
+    //easyCam.disableMouseInput();
     
     //load shaders
-    textureProjectionShader.load("TextureProjection");
-    depthStoringShader.load("DepthStoring");
-    projectorTextureShader.load("ProjectorTexture");
-    modelingBasicShader.load("ModelingBasic");
+    textureProjectionShader.load("TextureProjection"); //'Projection Mapping' shader
+    depthStoringShader.load("DepthStoring");           //'Shadow Map' shader
+    projectorTextureShader.load("ProjectorTexture");   //basic lighting on projector modeling
+    modelingBasicShader.load("ModelingBasic");         //basic lighting on imported modeling
     
     currentSelectedProjector = -1;
     isModelingSelected = -1;
@@ -75,7 +77,12 @@ void ofApp::setup(){
     cameraButtonPressed[3].load("UI/Button/right select.png");
     cameraButtonPressed[4].load("UI/Button/up select.png");
     cameraButtonPressed[5].load("UI/Button/down select.png");
+    cameraMenu.load("UI/DropDown/chooseMenu.png");
+    cameraMenuClicked.load("UI/DropDown/chooseMenuClick.png");
     cameraButtonPressedIndex = -1;
+    isTranslateMode = true;
+    isCameraMenuClicked = false;
+    
     
     panelWindow.load("UI/Panel/panelWindow.png");
     panelGrayBar.load("UI/Panel/grayBar.png");
@@ -89,6 +96,9 @@ void ofApp::setup(){
     
     projectorModel.loadModel("projector.3ds");
     reconstructProjectorMesh();
+    
+    ofAddListener(mappingWindow->events().exit, this, &ofApp::closeApp);
+    exiting = false;
 }
 
 //--------------------------------------------------------------
@@ -294,11 +304,8 @@ void ofApp::mousePressed(int x, int y, int button){
             }
             else if(y > ofGetHeight()/2/4*3 && y <= (ofGetHeight()/2 + cameraMoveBackground.getHeight())/4*3) {
                 if(y > (ofGetHeight()/2 + 45)/4*3 && y <= (ofGetHeight()/2 + 45 + cameraButton[2].getHeight())/4*3) {
-                    if(x > 28/4*3 && x <= (28 + cameraButton[2].getWidth())/4*3) {
+                    if(x > 28/4*3 && x <= (28 + cameraButton[2].getWidth())/4*3)
                         cameraButtonPressedIndex = 2;
-                        model.setScale(model.getScale().x + 0.01, model.getScale().x + 0.01, model.getScale().x + 0.01);
-                        reconstructMesh();
-                    }
                     else if(x > 106/4*3 && x <= (106 + cameraButton[2].getWidth())/4*3)
                         cameraButtonPressedIndex = 3;
                     else
@@ -314,6 +321,12 @@ void ofApp::mousePressed(int x, int y, int button){
                 }
                 else
                     cameraButtonPressedIndex = -1;
+            }
+            else if(y > ofGetHeight()/2 && y <= (ofGetHeight()/2 + cameraMenu.getHeight()/3*2)) {
+                if(x > 23 && x <= 23 + cameraMenu.getWidth()/2) {
+                    isTranslateMode = !isTranslateMode;
+                    isCameraMenuClicked = true;
+                }
             }
         }
         
@@ -517,6 +530,8 @@ void ofApp::mousePressed(int x, int y, int button){
 void ofApp::mouseReleased(int x, int y, int button){
     if(cameraButtonPressedIndex != -1)
         cameraButtonPressedIndex = -1;
+    if(isCameraMenuClicked)
+        isCameraMenuClicked = false;
     if(panelClickIndex != -1)
         panelClickIndex = -1;
 }
@@ -544,6 +559,13 @@ void ofApp::gotMessage(ofMessage msg){
 //--------------------------------------------------------------
 void ofApp::dragEvent(ofDragInfo dragInfo){ 
 
+}
+//--------------------------------------------------------------
+void ofApp::exit() {
+    if(!exiting) {
+        exiting = true;
+        ofExit();
+    }
 }
 
 //Additional function
@@ -578,45 +600,130 @@ void ofApp::deleteProjector(int projectorNum) {
 }
 
 void ofApp::settingCameraPosition() {
-    if(cameraButtonPressedIndex==0) {
+    if(cameraButtonPressedIndex==0) { //ZOOM IN
         easyCam.disableMouseInput();
         easyCam.dolly(-10);
     }
-    else if(cameraButtonPressedIndex==1) {
+    else if(cameraButtonPressedIndex==1) { //ZOOM OUT
         easyCam.disableMouseInput();
         easyCam.dolly(10);
     }
-    else if(cameraButtonPressedIndex==2) {
+    else if(cameraButtonPressedIndex==2) { //MOVE LEFT
         easyCam.disableMouseInput();
-        easyCam.move(easyCam.getSideDir() * -10);
-        float x = easyCam.getTarget().getX() - easyCam.getSideDir().x * 10;
-        float y = easyCam.getTarget().getY() - easyCam.getSideDir().y * 10;
-        float z = easyCam.getTarget().getZ() - easyCam.getSideDir().z * 10;
-        easyCam.setTarget(ofVec3f(x,y,z));
+        if(isTranslateMode) {
+            easyCam.move(easyCam.getSideDir() * -10);
+            float x = easyCam.getTarget().getX() - easyCam.getSideDir().x * 10;
+            float y = easyCam.getTarget().getY() - easyCam.getSideDir().y * 10;
+            float z = easyCam.getTarget().getZ() - easyCam.getSideDir().z * 10;
+            easyCam.setTarget(ofVec3f(x,y,z));
+        }
+        else {
+            float camToOriginX = easyCam.getPosition().x - easyCam.getTarget().getX();
+            float camToOriginY = easyCam.getPosition().y - easyCam.getTarget().getY();
+            float camToOriginZ = easyCam.getPosition().z - easyCam.getTarget().getZ();
+            
+            float ux = easyCam.getYAxis().x;
+            float uy = easyCam.getYAxis().y;
+            float uz = easyCam.getYAxis().z;
+            
+            float theta = -0.05;
+            
+            float rotatedX = ((cos(theta) + ux * ux * (1 - cos(theta))) * camToOriginX + (ux * uy * (1 - cos(theta)) - uz * sin(theta)) * camToOriginY + (ux * uz * (1 - cos(theta)) + uy * sin(theta)) * camToOriginZ) + easyCam.getTarget().getX();
+            float rotatedY = ((uy * ux * (1 - cos(theta)) + uz * sin(theta)) * camToOriginX + (cos(theta) + uy * uy * (1 - cos(theta))) * camToOriginY + (uy * uz * (1 - cos(theta)) - ux * sin(theta)) * camToOriginZ) + easyCam.getTarget().getY();
+            float rotatedZ = ((uz * ux * (1 - cos(theta)) - uy * sin(theta)) * camToOriginX + (uz * uy * (1 - cos(theta)) + ux * sin(theta)) * camToOriginY + (cos(theta) + uz * uz * (1 - cos(theta))) * camToOriginZ) + easyCam.getTarget().getZ();
+            
+            easyCam.setPosition(rotatedX, rotatedY, rotatedZ);
+            easyCam.setTarget(easyCam.getTarget());
+        }
+
     }
-    else if(cameraButtonPressedIndex==3) {
+    else if(cameraButtonPressedIndex==3) { //MOVE RIGHT
         easyCam.disableMouseInput();
-        easyCam.move(easyCam.getSideDir() * 10);
-        float x = easyCam.getTarget().getX() + easyCam.getSideDir().x * 10;
-        float y = easyCam.getTarget().getY() + easyCam.getSideDir().y * 10;
-        float z = easyCam.getTarget().getZ() + easyCam.getSideDir().z * 10;
-        easyCam.setTarget(ofVec3f(x, y, z));
+        if(isTranslateMode) {
+            easyCam.move(easyCam.getSideDir() * 10);
+            float x = easyCam.getTarget().getX() + easyCam.getSideDir().x * 10;
+            float y = easyCam.getTarget().getY() + easyCam.getSideDir().y * 10;
+            float z = easyCam.getTarget().getZ() + easyCam.getSideDir().z * 10;
+            easyCam.setTarget(ofVec3f(x, y, z));
+        }
+        else {
+            float camToOriginX = easyCam.getPosition().x - easyCam.getTarget().getX();
+            float camToOriginY = easyCam.getPosition().y - easyCam.getTarget().getY();
+            float camToOriginZ = easyCam.getPosition().z - easyCam.getTarget().getZ();
+            
+            float ux = easyCam.getYAxis().x;
+            float uy = easyCam.getYAxis().y;
+            float uz = easyCam.getYAxis().z;
+            
+            float theta = 0.05;
+            
+            float rotatedX = ((cos(theta) + ux * ux * (1 - cos(theta))) * camToOriginX + (ux * uy * (1 - cos(theta)) - uz * sin(theta)) * camToOriginY + (ux * uz * (1 - cos(theta)) + uy * sin(theta)) * camToOriginZ) + easyCam.getTarget().getX();
+            float rotatedY = ((uy * ux * (1 - cos(theta)) + uz * sin(theta)) * camToOriginX + (cos(theta) + uy * uy * (1 - cos(theta))) * camToOriginY + (uy * uz * (1 - cos(theta)) - ux * sin(theta)) * camToOriginZ) + easyCam.getTarget().getY();
+            float rotatedZ = ((uz * ux * (1 - cos(theta)) - uy * sin(theta)) * camToOriginX + (uz * uy * (1 - cos(theta)) + ux * sin(theta)) * camToOriginY + (cos(theta) + uz * uz * (1 - cos(theta))) * camToOriginZ) + easyCam.getTarget().getZ();
+            
+            easyCam.setPosition(rotatedX, rotatedY, rotatedZ);
+            easyCam.setTarget(easyCam.getTarget());
+        }
     }
-    else if(cameraButtonPressedIndex==4) {
+    else if(cameraButtonPressedIndex==4) { //MOVE UP
         easyCam.disableMouseInput();
-        easyCam.move(easyCam.getUpDir() * 10);
-        float x = easyCam.getTarget().getX() + easyCam.getUpDir().x * 10;
-        float y = easyCam.getTarget().getY() + easyCam.getUpDir().y * 10;
-        float z = easyCam.getTarget().getZ() + easyCam.getUpDir().z * 10;
-        easyCam.setTarget(ofVec3f(x, y, z));
+        if(isTranslateMode) {
+            easyCam.move(easyCam.getUpDir() * 10);
+            float x = easyCam.getTarget().getX() + easyCam.getUpDir().x * 10;
+            float y = easyCam.getTarget().getY() + easyCam.getUpDir().y * 10;
+            float z = easyCam.getTarget().getZ() + easyCam.getUpDir().z * 10;
+            easyCam.setTarget(ofVec3f(x, y, z));
+        }
+        else {
+            float camToOriginX = easyCam.getPosition().x - easyCam.getTarget().getX();
+            float camToOriginY = easyCam.getPosition().y - easyCam.getTarget().getY();
+            float camToOriginZ = easyCam.getPosition().z - easyCam.getTarget().getZ();
+            
+            float ux = easyCam.getXAxis().x;
+            float uy = easyCam.getXAxis().y;
+            float uz = easyCam.getXAxis().z;
+            
+            float theta = -0.05;
+            
+            float rotatedX = ((cos(theta) + ux * ux * (1 - cos(theta))) * camToOriginX + (ux * uy * (1 - cos(theta)) - uz * sin(theta)) * camToOriginY + (ux * uz * (1 - cos(theta)) + uy * sin(theta)) * camToOriginZ) + easyCam.getTarget().getX();
+            float rotatedY = ((uy * ux * (1 - cos(theta)) + uz * sin(theta)) * camToOriginX + (cos(theta) + uy * uy * (1 - cos(theta))) * camToOriginY + (uy * uz * (1 - cos(theta)) - ux * sin(theta)) * camToOriginZ) + easyCam.getTarget().getY();
+            float rotatedZ = ((uz * ux * (1 - cos(theta)) - uy * sin(theta)) * camToOriginX + (uz * uy * (1 - cos(theta)) + ux * sin(theta)) * camToOriginY + (cos(theta) + uz * uz * (1 - cos(theta))) * camToOriginZ) + easyCam.getTarget().getZ();
+            
+            easyCam.setPosition(rotatedX, rotatedY, rotatedZ);
+            easyCam.setTarget(easyCam.getTarget());
+            if(easyCam.getXAxis().x < 0)
+                easyCam.roll(180);
+        }
     }
-    else if(cameraButtonPressedIndex==5) {
+    else if(cameraButtonPressedIndex==5) { //MOVE DOWN
         easyCam.disableMouseInput();
-        easyCam.move(easyCam.getUpDir() * -10);
-        float x = easyCam.getTarget().getX() - easyCam.getUpDir().x * 10;
-        float y = easyCam.getTarget().getY() - easyCam.getUpDir().y * 10;
-        float z = easyCam.getTarget().getZ() - easyCam.getUpDir().z * 10;
-        easyCam.setTarget(ofVec3f(x, y, z));
+        if(isTranslateMode) {
+            easyCam.move(easyCam.getUpDir() * -10);
+            float x = easyCam.getTarget().getX() - easyCam.getUpDir().x * 10;
+            float y = easyCam.getTarget().getY() - easyCam.getUpDir().y * 10;
+            float z = easyCam.getTarget().getZ() - easyCam.getUpDir().z * 10;
+            easyCam.setTarget(ofVec3f(x, y, z));
+        }
+        else {
+            float camToOriginX = easyCam.getPosition().x - easyCam.getTarget().getX();
+            float camToOriginY = easyCam.getPosition().y - easyCam.getTarget().getY();
+            float camToOriginZ = easyCam.getPosition().z - easyCam.getTarget().getZ();
+            
+            float ux = easyCam.getXAxis().x;
+            float uy = easyCam.getXAxis().y;
+            float uz = easyCam.getXAxis().z;
+            
+            float theta = 0.05;
+            
+            float rotatedX = ((cos(theta) + ux * ux * (1 - cos(theta))) * camToOriginX + (ux * uy * (1 - cos(theta)) - uz * sin(theta)) * camToOriginY + (ux * uz * (1 - cos(theta)) + uy * sin(theta)) * camToOriginZ) + easyCam.getTarget().getX();
+            float rotatedY = ((uy * ux * (1 - cos(theta)) + uz * sin(theta)) * camToOriginX + (cos(theta) + uy * uy * (1 - cos(theta))) * camToOriginY + (uy * uz * (1 - cos(theta)) - ux * sin(theta)) * camToOriginZ) + easyCam.getTarget().getY();
+            float rotatedZ = ((uz * ux * (1 - cos(theta)) - uy * sin(theta)) * camToOriginX + (uz * uy * (1 - cos(theta)) + ux * sin(theta)) * camToOriginY + (cos(theta) + uz * uz * (1 - cos(theta))) * camToOriginZ) + easyCam.getTarget().getZ();
+            
+            easyCam.setPosition(rotatedX, rotatedY, rotatedZ);
+            easyCam.setTarget(easyCam.getTarget());
+            if(easyCam.getXAxis().x < 0)
+                easyCam.roll(180);
+        }
     }
     else {
         if(!easyCam.getMouseInputEnabled()) {
@@ -624,10 +731,13 @@ void ofApp::settingCameraPosition() {
             if(panelClickIndex == -1) {
                 ofNode t = easyCam.getTarget();
                 ofVec3f p = easyCam.getPosition();
-                //easyCam.enableMouseInput();
+                float r = easyCam.getRoll();
+                ofVec3f v = easyCam.getXAxis();
                 easyCam.reset();
                 easyCam.setPosition(p.x, p.y, p.z);
                 easyCam.setTarget(t);
+                if(v!=easyCam.getXAxis())
+                    easyCam.roll(180);
             }
         }
     }
@@ -1016,6 +1126,23 @@ void ofApp::drawButtons() {
         cameraButtonPressed[5].draw(67/4*3, (ofGetHeight()/2 + 81)/4*3, cameraButtonPressed[5].getWidth()/4*3, cameraButtonPressed[5].getHeight()/4*3);
     else
         cameraButton[5].draw(67/4*3, (ofGetHeight()/2 + 81)/4*3, cameraButton[5].getWidth()/4*3, cameraButton[5].getHeight()/4*3);
+    
+    if(isCameraMenuClicked) {
+        cameraMenuClicked.draw(23, (ofGetHeight()/2), cameraMenuClicked.getWidth()/2, cameraMenu.getHeight()/3*2);
+        ofPushStyle();
+        ofSetColor(255,255,255);
+    }
+    else {
+        cameraMenu.draw(23, (ofGetHeight()/2), cameraMenu.getWidth()/2, cameraMenu.getHeight()/3*2);
+        ofPushStyle();
+        ofSetColor(0,0,0);
+    }
+    
+    if(isTranslateMode)
+        ofDrawBitmapString("Translate", 25, ofGetHeight()/2 + 15);
+    else
+        ofDrawBitmapString("Orbit", 30, ofGetHeight()/2 + 15);
+    ofPopStyle();
 }
 
 void ofApp::drawHeaders() {
@@ -1345,4 +1472,8 @@ int ofApp::findNearProjectorIndex(ofPoint mousePt) {
 void ofApp::scaleModeling(float factor) {
     model.setScale(model.getScale().x + factor, model.getScale().x + factor, model.getScale().x + factor);
     reconstructMesh();
+}
+
+void ofApp::closeApp(ofEventArgs &args) {
+    exit();
 }

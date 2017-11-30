@@ -15,6 +15,8 @@ void MappingApp::setup() {
     centerPt.x = 375;
     centerPt.y = 375;
     
+    clickedCoord = ofPoint(-1, -1);
+    
     panelWindow.load("UI/Panel/panelWindow.png");
     panelGrayBar.load("UI/Panel/grayBar.png");
     panelGreenBar.load("UI/Panel/greenBar.png");
@@ -192,49 +194,62 @@ void MappingApp::mouseMoved(int x, int y ){
 
 //--------------------------------------------------------------
 void MappingApp::mouseDragged(int x, int y, int button){
-    if(projector==NULL)
-        return ;
-    
-    if(panelClickIndex != -1) {
-        if(x >= 135 && x <= 135 + 250) {
-            if(panelClickIndex==0) {
-                float realValue = (float)(x - 135) / 250 * 3000;
-                projector->pivotDistance = realValue;
-                //setProjector(projector);
-            }
-            else if(panelClickIndex==1) {
-                float realValue = (float)(x - 135) / 250 * 5000;
-                projector->pivotWidth = realValue;
-                //setProjector(projector);
-                
-            }
-            else if(panelClickIndex==2) {
-                float realValue = (float)(x - 135) / 250 * 5000;
-                projector->pivotHeight = realValue;
-                //setProjector(projector);
-            }
-        }
+    if(clickedCoord.x != -1) {
+        float xOffset = x - clickedCoord.x;
+        float yOffset = y - clickedCoord.y;
+        ofSetWindowPosition(ofGetWindowPositionX() + xOffset, ofGetWindowPositionY() + yOffset);
     }
     else {
-        float nearestDistance = 50;
-        int nearestIndex = -1;
-        for(int i=0; i<4; i++) {
-            float distance = ofVec2f(points[i].x,points[i].y).distance(ofVec2f(x,y));
-            if(distance < 50 && distance < nearestDistance) {
-                nearestDistance = distance;
-                nearestIndex = i;
+        if(projector==NULL)
+            return ;
+    
+        if(panelClickIndex != -1) {
+            if(x >= 135 && x <= 135 + 250) {
+                if(panelClickIndex==0) {
+                    float realValue = (float)(x - 135) / 250 * 3000;
+                    projector->pivotDistance = realValue;
+                    //setProjector(projector);
+                }
+                else if(panelClickIndex==1) {
+                    float realValue = (float)(x - 135) / 250 * 5000;
+                    projector->pivotWidth = realValue;
+                    //setProjector(projector);
+                }
+                else if(panelClickIndex==2) {
+                    float realValue = (float)(x - 135) / 250 * 5000;
+                    projector->pivotHeight = realValue;
+                    //setProjector(projector);
+                }
             }
         }
-        if(x >= leftX && x<= rightX && y >= upY && y <= downY) {
-            points[nearestIndex].x = x;
-            points[nearestIndex].y = y;
+        else {
+            float nearestDistance = 50;
+            int nearestIndex = -1;
+            for(int i=0; i<4; i++) {
+                float distance = ofVec2f(points[i].x,points[i].y).distance(ofVec2f(x,y));
+                if(distance < 50 && distance < nearestDistance) {
+                    nearestDistance = distance;
+                    nearestIndex = i;
+                }
+            }
+            if(x >= leftX && x<= rightX && y >= upY && y <= downY) {
+                points[nearestIndex].x = x;
+                points[nearestIndex].y = y;
+            }
+            toRealValue();
         }
-        toRealValue();
     }
 }
 
 //--------------------------------------------------------------
 void MappingApp::mousePressed(int x, int y, int button){
+    if(y > 0 && y <= 25) {
+        clickedCoord = ofPoint(x,y);
+    }
+    else {
+        clickedCoord = ofPoint(-1,-1);
+    }
+    
     if(projector==NULL)
         return ;
     /*if(projector->videoPlayer.isLoaded() && panelClickIndex == -1) {
@@ -304,6 +319,8 @@ void MappingApp::mousePressed(int x, int y, int button){
 
 //--------------------------------------------------------------
 void MappingApp::mouseReleased(int x, int y, int button){
+    if(clickedCoord.x != -1)
+        clickedCoord = ofPoint(-1,-1);
     if(panelClickIndex != -1) {
         panelClickIndex = -1;
         setProjector(projector);
@@ -334,6 +351,7 @@ void MappingApp::gotMessage(ofMessage msg){
 void MappingApp::dragEvent(ofDragInfo dragInfo){
     
 }
+
 
 void MappingApp::setProjector(Projector* proj) {
     projector = proj;
