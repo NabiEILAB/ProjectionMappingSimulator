@@ -20,7 +20,9 @@ void ofApp::setup(){
     
     //maximum camera rendering distance limit
     easyCam.setFarClip(12000);
-    //easyCam.disableMouseInput();
+    easyCam.setPosition(0,200,600);
+    easyCam.setTarget(ofVec3f(0,0,0));
+    easyCam.disableMouseInput();
     
     //load shaders
     textureProjectionShader.load("TextureProjection"); //'Projection Mapping' shader
@@ -79,7 +81,15 @@ void ofApp::setup(){
     cameraButtonPressed[5].load("UI/Button/down select.png");
     cameraMenu.load("UI/DropDown/chooseMenu.png");
     cameraMenuClicked.load("UI/DropDown/chooseMenuClick.png");
+    cameraTopMenu.load("UI/DropDown/topMenu.png");
+    cameraTopMenuHover.load("UI/DropDown/topMenuHover.png");
+    cameraCenterMenu.load("UI/DropDown/centerMenu.png");
+    cameraCenterMenuHover.load("UI/DropDown/centerMenuHover.png");
+    cameraBottomMenu.load("UI/DropDown/bottomMenu.png");
+    cameraBottomMenuHover.load("UI/Dropdown/bottomMenuHover.png");
     cameraButtonPressedIndex = -1;
+    cameraModeHoverIndex = -1;
+    currentCameraModeIndex = 0;
     isTranslateMode = true;
     isCameraMenuClicked = false;
     
@@ -90,7 +100,13 @@ void ofApp::setup(){
     panelSliderButton.load("UI/Panel/sliderButton.png");
     panelLabel.load("UI/Panel/label.png");
     panelLabelClick.load("UI/Panel/labelClick.png");
+    panelButtonPlus.load("UI/Button/+ deselect.png");
+    panelButtonPlusPressed.load("UI/Button/+ select.png");
+    panelButtonMinus.load("UI/Button/- deselect.png");
+    panelButtonMinusPressed.load("UI/Button/- select.png");
     panelClickIndex = -1;
+    panelPlusClickIndex = -1;
+    panelMinusClickIndex = -1;
     
     currentModelURL = "";
     
@@ -124,6 +140,7 @@ void ofApp::draw(){
     
     ofDisableDepthTest();
     ofEnableBlendMode(OF_BLENDMODE_ALPHA);
+    
     //gui.draw();
     drawPanel();
     drawButtons();
@@ -136,404 +153,67 @@ void ofApp::draw(){
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
-    
+    switch(key) {
+        case 'e' : {
+            cameraButtonPressedIndex = 0;
+            break;
+        }
+        case 'q' : {
+            cameraButtonPressedIndex = 1;
+            break;
+        }
+        case 'a' : {
+            cameraButtonPressedIndex = 2;
+            break;
+        }
+        case 'd' : {
+            cameraButtonPressedIndex = 3;
+            break;
+        }
+        case 'w' : {
+            cameraButtonPressedIndex = 4;
+            break;
+        }
+        case 's' : {
+            cameraButtonPressedIndex = 5;
+            break;
+        }
+    }
 }
 
 //--------------------------------------------------------------
 void ofApp::keyReleased(int key){
-
+    cameraButtonPressedIndex = -1;
 }
 
 //--------------------------------------------------------------
 void ofApp::mouseMoved(int x, int y ){
-    if(isGridDropDownOn || isProjectorDropDownOn) {
-        if(x > clickedCoord.x && x < clickedCoord.x + 144) {
-            if(isGridDropDownOn) {
-                gridDropDownHoverIndex = -1;
-                for(int i = 0; i < sizeof(gridDropDown)/sizeof(gridDropDown[0]); i++) {
-                    if(y > clickedCoord.y + (20 * i) && y <= clickedCoord.y + 20 + (20 * i)) {
-                        gridDropDownHoverIndex = i;
-                        break;
-                    }
-                }
-            }
-            else if(isProjectorDropDownOn) {
-                projectorDropDownHoverIndex = -1;
-                for(int i = 0; i < sizeof(projectorDropDown)/sizeof(projectorDropDown[0]); i++) {
-                    if(y > clickedCoord.y + (20 * i) && y <= clickedCoord.y + 20 + (20 * i)) {
-                        projectorDropDownHoverIndex = i;
-                        break;
-                    }
-                }
-            }
-        }
-        else {
-            gridDropDownHoverIndex = -1;
-            projectorDropDownHoverIndex = -1;
-        }
-    }
-    
-    switch(headerHoverIndex) {
-        //resized resource version (original size to 3/4)
-        case 0 : {
-            float currentYPos = 20 + headerMenu[0].getHeight()/4*3;
-            if(x > ofGetWidth() - 200 && x <= ofGetWidth() - 200 + subMenuFile[0].getWidth()/4*3) {
-                for(int i=0; i<sizeof(subFileHover)/sizeof(subFileHover[0]); i++) {
-                    subFileHoverIndex = -1;
-                    if(y > currentYPos && y <= currentYPos + subMenuFile[i].getHeight()/4*3) {
-                        subFileHoverIndex = i;
-                        break;
-                    }
-                    currentYPos += subMenuFile[i].getHeight()/4*3;
-                }
-            }
-            else
-                subFileHoverIndex = -1;
-            break;
-        }
-        case 1 : {
-            float currentYPos = 20 + headerMenu[0].getHeight()/4*3;
-            if(x > ofGetWidth() - 200 && x <= ofGetWidth() - 200 + subMenuFile[0].getWidth()/4*3) {
-                for(int i=0; i<sizeof(subModelingHover)/sizeof(subModelingHover[0]); i++) {
-                    subModelingHoverIndex = -1;
-                    if(y > currentYPos && y <= currentYPos + subMenuModeling[i].getHeight()/4*3) {
-                        subModelingHoverIndex = i;
-                        break;
-                    }
-                    currentYPos += subMenuModeling[i].getHeight()/4*3;
-                }
-            }
-            else
-                subModelingHoverIndex = -1;
-            break;
-        }
-    }
+    dropDownMoveEventCheck(x,y);
+    headerMoveEventCheck(x,y);
+    cameraMoveEventCheck(x,y);
 }
 
 //--------------------------------------------------------------
 void ofApp::mouseDragged(int x, int y, int button){
-    if(currentSelectedProjector != -1 && button == OF_MOUSE_BUTTON_LEFT) {
-        if(x >= 90 && x <= 90 + 450) {
-            if(panelClickIndex == 0) {
-                float realValue = (float)(x - 90) / 450 * 6000 - 3000;
-                projectors[currentSelectedProjector]->xPos = realValue;
-            }
-            else if(panelClickIndex == 1) {
-                float realValue = (float)(x - 90) / 450 * 6000 - 3000;
-                projectors[currentSelectedProjector]->yPos = realValue;
-            }
-            else if(panelClickIndex == 2) {
-                float realValue = (float)(x - 90) / 450 * 6000 - 3000;
-                projectors[currentSelectedProjector]->zPos = realValue;
-            }
-            else if(panelClickIndex == 3) {
-                float realValue = (float)(x - 90) / 450 * 720 - 360;
-                projectors[currentSelectedProjector]->xRotation = realValue;
-            }
-            else if(panelClickIndex == 4) {
-                float realValue = (float)(x - 90) / 450 * 720 - 360;
-                projectors[currentSelectedProjector]->yRotation = realValue;
-            }
-            else if(panelClickIndex == 5) {
-                float realValue = (float)(x - 90) / 450 * 720 - 360;
-                projectors[currentSelectedProjector]->zRotation = realValue;
-            }
-        }
-    }
-    else if(isModelingSelected == 1) {
-        if(panelClickIndex == 6) {
-            float realValue = (float)(x - 120) / 450 * 50;
-            float offset = realValue - model.getScale().x;
-            scaleModeling(offset);
-        }
-    }
+    panelDragEventCheck(x, y, button);
 }
 
 //--------------------------------------------------------------
 void ofApp::mousePressed(int x, int y, int button){
-    if(button == OF_MOUSE_BUTTON_LEFT) {
-        if(isGridDropDownOn) {
-            switch(gridDropDownHoverIndex) {
-                case 0 : {
-                    ofVec3f pt = findNearGridPoint(ofPoint(x,y));
-                    addProjector(pt.x, pt.y, pt.z);
-                    break;
-                }
-                case 1 : {
-                    break;
-                }
-                case 2 : {
-                    break;
-                }
-            }
-            gridDropDownHoverIndex = -1;
-            isGridDropDownOn = false;
-        }
-        else if(isProjectorDropDownOn) {
-            switch(projectorDropDownHoverIndex) {
-                case 0 : {
-                    if(currentSelectedProjector != -1) {
-                        easyCam.disableMouseInput();
-                        ofFileDialogResult openFileResult = ofSystemLoadDialog("Select Video file");
-                        
-                        if(openFileResult.bSuccess)
-                            openVideoFile(openFileResult);
-                    }
-                    break;
-                }
-                case 1 : {
-                    if(currentSelectedProjector != -1)
-                        deleteProjector(currentSelectedProjector);
-                    break;
-                }
-            }
-            projectorDropDownHoverIndex = -1;
-            isProjectorDropDownOn = false;
-        }
-        else {
-            //3/4 version
-            if(y > (ofGetHeight()/2 - 200)/4*3 && y <= (ofGetHeight()/2 - 200 + cameraZoomBackground.getHeight())/4*3) {
-                if(x > 56/4*3 && x <= (56 + 56)/4*3) {
-                    if(y > (ofGetHeight()/2 - 192)/4*3 && y <= (ofGetHeight()/2 - 192 + 72)/4*3)
-                        cameraButtonPressedIndex = 0;
-                    else if(y > (ofGetHeight()/2 - 192 + 72)/4*3 && y <= (ofGetHeight()/2 - 192 + (72 * 2))/4*3)
-                        cameraButtonPressedIndex = 1;
-                    else
-                        cameraButtonPressedIndex = -1;
-                }
-            }
-            else if(y > ofGetHeight()/2/4*3 && y <= (ofGetHeight()/2 + cameraMoveBackground.getHeight())/4*3) {
-                if(y > (ofGetHeight()/2 + 45)/4*3 && y <= (ofGetHeight()/2 + 45 + cameraButton[2].getHeight())/4*3) {
-                    if(x > 28/4*3 && x <= (28 + cameraButton[2].getWidth())/4*3)
-                        cameraButtonPressedIndex = 2;
-                    else if(x > 106/4*3 && x <= (106 + cameraButton[2].getWidth())/4*3)
-                        cameraButtonPressedIndex = 3;
-                    else
-                        cameraButtonPressedIndex = -1;
-                }
-                else if(x > 67/4*3 && x <= (67 + cameraButton[2].getWidth())/4*3) {
-                    if(y > (ofGetHeight()/2 + 5)/4*3 && y <= (ofGetHeight()/2 + 5 + cameraButton[2].getHeight())/4*3)
-                        cameraButtonPressedIndex = 4;
-                    else if(y > (ofGetHeight()/2 + 81)/4*3 && y <= (ofGetHeight()/2 + 81 + cameraButton[2].getHeight())/4*3)
-                        cameraButtonPressedIndex = 5;
-                    else
-                        cameraButtonPressedIndex = -1;
-                }
-                else
-                    cameraButtonPressedIndex = -1;
-            }
-            else if(y > ofGetHeight()/2 && y <= (ofGetHeight()/2 + cameraMenu.getHeight()/3*2)) {
-                if(x > 23 && x <= 23 + cameraMenu.getWidth()/2) {
-                    isTranslateMode = !isTranslateMode;
-                    isCameraMenuClicked = true;
-                }
-            }
-        }
-        
-        if(currentSelectedProjector != -1 && panelClickIndex == -1) {
-            if(y > 590 && y <= 600) {
-                float xPos = projectors[currentSelectedProjector]->xPos;
-                float lengthRatio = (xPos + 3000) / 6000;
-                float barLength = 450 * lengthRatio;
-                if(x > 90 + barLength - 10 && x <= 90 + barLength + 10) {
-                    panelClickIndex = 0;
-                    easyCam.disableMouseInput();
-                }
-            }
-            else if(y > 620 && y <= 630) {
-                float yPos = projectors[currentSelectedProjector]->yPos;
-                float lengthRatio = (yPos + 3000) / 6000;
-                float barLength = 450 * lengthRatio;
-                if(x > 90 + barLength - 10 && x <= 90 + barLength + 10) {
-                    panelClickIndex = 1;
-                    easyCam.disableMouseInput();
-                }
-            }
-            else if(y > 650 && y <= 660) {
-                float zPos = projectors[currentSelectedProjector]->zPos;
-                float lengthRatio = (zPos + 3000) / 6000;
-                float barLength = 450 * lengthRatio;
-                if(x > 90 + barLength - 10 && x <= 90 + barLength + 10) {
-                    panelClickIndex = 2;
-                    easyCam.disableMouseInput();
-                }
-            }
-            else if(y > 680 && y <= 690) {
-                float xRotation = projectors[currentSelectedProjector]->xRotation;
-                float lengthRatio = (xRotation + 360) / 720;
-                float barLength = 450 * lengthRatio;
-                if(x > 90 + barLength - 10 && x <= 90 + barLength + 10) {
-                    panelClickIndex = 3;
-                    easyCam.disableMouseInput();
-                }
-            }
-            else if(y > 710 && y <= 720) {
-                float yRotation = projectors[currentSelectedProjector]->yRotation;
-                float lengthRatio = (yRotation + 360) / 720;
-                float barLength = 450 * lengthRatio;
-                if(x > 90 + barLength - 10 && x <= 90 + barLength + 10) {
-                    panelClickIndex = 4;
-                    easyCam.disableMouseInput();
-                }
-            }
-            else if(y > 740 && y <= 750) {
-                float zRotation = projectors[currentSelectedProjector]->zRotation;
-                float lengthRatio = (zRotation + 360) / 720;
-                float barLength = 450 * lengthRatio;
-                if(x > 90 + barLength - 10 && x <= 90 + barLength + 10) {
-                    panelClickIndex = 5;
-                    easyCam.disableMouseInput();
-                }
-            }
-        }
-        else if(isModelingSelected == 1) {
-            if(y > ofGetHeight() - 95 && y <= ofGetHeight() - 85) {
-                float currentScale = model.getScale().x;
-                float lengthRatio = currentScale / 50;
-                float barLength = 450 * lengthRatio;
-                if(x > 120 + barLength - 10 && x <= 120 + barLength + 10) {
-                    panelClickIndex = 6;
-                    easyCam.disableMouseInput();
-                }
-            }
-        }
-        
-        if(y > ofGetHeight() - 200 && y <= ofGetHeight() - 200 + 18) {
-            int index = 0;
-            for(int i=0; i<7; i++) {
-                if(x > 10 + (90 * i) && x <= 10 + (90 * (i + 1))) {
-                    index = i;
-                    break;
-                }
-            }
-            int currentIndex = 0;
-            for(int i=0; i<projectors.size(); i++) {
-                if(projectors[i]->isSetted) {
-                    if(currentIndex == index) {
-                        if(currentSelectedProjector != -1 && currentSelectedProjector != i)
-                            projectors[currentSelectedProjector]->isSelected = false;
-                        currentSelectedProjector = i;
-                        projectors[currentSelectedProjector]->isSelected = true;
-                        mappingGUI->setProjector(projectors[currentSelectedProjector]);
-                        break;
-                    }
-                    else
-                        currentIndex++;
-                }
-            }
-        }
-        
-        if(y > 20 && y <= 20 + (headerMenu[0].getHeight())/4*3) { //3/4 version
-            for(int i = 0; i < sizeof(headerHover)/sizeof(headerHover[0]); i++) {
-                headerHoverIndex = -1;
-                if(i != 0) {
-                    if(x > ofGetWidth() - 200 + (headerMenu[i-1].getWidth())/4*3 && x <= ofGetWidth() - 200 + (headerMenu[i-1].getWidth() + headerMenu[i].getWidth())/4*3) {
-                        headerHoverIndex = i;
-                        break;
-                    }
-                }
-                else {
-                    if(x > ofGetWidth() - 200 && x <= ofGetWidth() - 200 + (headerMenu[i].getWidth())/4*3) {
-                        headerHoverIndex = i;
-                        break;
-                    }
-                }
-            }
-        }
-        else
-            headerHoverIndex = -1;
-        
-        switch(subFileHoverIndex) {
-            case 0 : {
-                //ofLog() << "menu 1";
-                break;
-            }
-            case 1 : {
-                //ofLog() << "menu 2";
-                easyCam.disableMouseInput();
-                save();
-                break;
-            }
-            case 2 : {
-                //ofLog() << "menu 3";
-                easyCam.disableMouseInput();
-                load();
-                break;
-            }
-            //subFileHoverIndex = -1;
-        }
-        subFileHoverIndex = -1;
-        
-        switch(subModelingHoverIndex) {
-            case 0 : {
-                //ofLog() << "menu 1";
-                easyCam.disableMouseInput();
-                ofFileDialogResult openFileResult = ofSystemLoadDialog("Select 3d file");
-                if(openFileResult.bSuccess)
-                    open3DFile(openFileResult);
-                subModelingHoverIndex = -1;
-                break;
-            }
-        }
-        
-        int nearestIndex = findNearProjectorIndex(ofVec2f(x,y));
-        if(nearestIndex != -1) {
-            if(currentSelectedProjector == nearestIndex) {
-                projectors[nearestIndex]->isSelected = false;
-                currentSelectedProjector = -1;
-                
-                mappingGUI->projector = NULL;
-            }
-            else {
-                if(currentSelectedProjector != -1)
-                    projectors[currentSelectedProjector]->isSelected = false;
-                
-                projectors[nearestIndex]->isSelected = true;
-                currentSelectedProjector = nearestIndex;
-                
-                //if(projectors[currentSelectedProjector]->videoPlayer.isLoaded())
-                mappingGUI->setProjector(projectors[nearestIndex]);
-            }
-            //refreshGUI();
-        }
-        else {
-            if(isModelingSelected == 1) {
-                if(currentSelectedProjector != -1)
-                    projectors[currentSelectedProjector]->isSelected = false;
-                currentSelectedProjector = -1;
-                mappingGUI->projector = NULL;
-            }
-        }
-    }
-    else if(button == OF_MOUSE_BUTTON_RIGHT) {
-        clickedCoord = ofPoint(x,y);
-        int nearestIndex = findNearProjectorIndex(clickedCoord);
-        if(nearestIndex != -1) {
-            isGridDropDownOn = false;
-            if(currentSelectedProjector != nearestIndex) {
-                if(currentSelectedProjector != -1)
-                    projectors[currentSelectedProjector]->isSelected = false;
-                projectors[nearestIndex]->isSelected = true;
-                currentSelectedProjector = nearestIndex;
-                mappingGUI->setProjector(projectors[nearestIndex]);
-            }
-            isProjectorDropDownOn = true;
-        }
-        else {
-            isProjectorDropDownOn = false;
-            isGridDropDownOn = true;
-        }
-    }
+    dropDownClickEventCheck(x, y, button);
+    cameraClickEventCheck(x, y, button);
+    panelClickEventCheck(x, y, button);
+    labelClickEventCheck(x, y, button);
+    headerClickEventCheck(x, y, button);
+    subClickEventCheck(x, y, button);
+    objectClickEventCheck(x, y, button);
 }
 
 //--------------------------------------------------------------
 void ofApp::mouseReleased(int x, int y, int button){
     if(cameraButtonPressedIndex != -1)
         cameraButtonPressedIndex = -1;
-    if(isCameraMenuClicked)
-        isCameraMenuClicked = false;
-    if(panelClickIndex != -1)
-        panelClickIndex = -1;
+    panelReleaseEventCheck(x, y, button);
 }
 
 //--------------------------------------------------------------
@@ -569,7 +249,7 @@ void ofApp::exit() {
 }
 
 //Additional function
-void ofApp::refreshGUI() {
+/*void ofApp::refreshGUI() {
     gui.clear();
     projectorPanelGroup.clear();
     for(int i=0; i<projectors.size(); i++) {
@@ -578,7 +258,7 @@ void ofApp::refreshGUI() {
         }
     }
     gui.setup(projectorPanelGroup);
-}
+}*/
 
 void ofApp::addProjector(float x, float y, float z) {
     for(int i=0; i<projectors.size(); i++) {
@@ -596,28 +276,46 @@ void ofApp::addProjector(float x, float y, float z) {
 void ofApp::deleteProjector(int projectorNum) {
     projectors[projectorNum]->deactivate();
     currentSelectedProjector = -1;
-    refreshGUI();
+    //refreshGUI();
 }
 
 void ofApp::settingCameraPosition() {
     if(cameraButtonPressedIndex==0) { //ZOOM IN
-        easyCam.disableMouseInput();
+        //easyCam.disableMouseInput();
         easyCam.dolly(-10);
     }
     else if(cameraButtonPressedIndex==1) { //ZOOM OUT
-        easyCam.disableMouseInput();
+        //easyCam.disableMouseInput();
         easyCam.dolly(10);
     }
-    else if(cameraButtonPressedIndex==2) { //MOVE LEFT
-        easyCam.disableMouseInput();
-        if(isTranslateMode) {
+    else if(cameraButtonPressedIndex==2) { //MOVE LEFT & ROTATE LEFT & ORBIT LEFT
+        //easyCam.disableMouseInput();
+        if(currentCameraModeIndex==0) {
             easyCam.move(easyCam.getSideDir() * -10);
             float x = easyCam.getTarget().getX() - easyCam.getSideDir().x * 10;
             float y = easyCam.getTarget().getY() - easyCam.getSideDir().y * 10;
             float z = easyCam.getTarget().getZ() - easyCam.getSideDir().z * 10;
             easyCam.setTarget(ofVec3f(x,y,z));
         }
-        else {
+        else if(currentCameraModeIndex==1) {
+            float targetToOriginX = easyCam.getTarget().getX() - easyCam.getPosition().x;
+            float targetToOriginY = easyCam.getTarget().getY() - easyCam.getPosition().y;
+            float targetToOriginZ = easyCam.getTarget().getZ() - easyCam.getPosition().z;
+            
+            float ux = -easyCam.getYAxis().x;
+            float uy = -easyCam.getYAxis().y;
+            float uz = -easyCam.getYAxis().z;
+            
+            float theta = -0.05;
+            
+            float rotatedX = ((cos(theta) + ux * ux * (1 - cos(theta))) * targetToOriginX + (ux * uy * (1 - cos(theta)) - uz * sin(theta)) * targetToOriginY + (ux * uz * (1 - cos(theta)) + uy * sin(theta)) * targetToOriginZ) + easyCam.getPosition().x;
+            float rotatedY = ((uy * ux * (1 - cos(theta)) + uz * sin(theta)) * targetToOriginX + (cos(theta) + uy * uy * (1 - cos(theta))) * targetToOriginY + (uy * uz * (1 - cos(theta)) - ux * sin(theta)) * targetToOriginZ) + easyCam.getPosition().y;
+            float rotatedZ = ((uz * ux * (1 - cos(theta)) - uy * sin(theta)) * targetToOriginX + (uz * uy * (1 - cos(theta)) + ux * sin(theta)) * targetToOriginY + (cos(theta) + uz * uz * (1 - cos(theta))) * targetToOriginZ) + easyCam.getPosition().z;
+            
+            easyCam.setTarget(ofVec3f(rotatedX, rotatedY, rotatedZ));
+            
+        }
+        else if(currentCameraModeIndex==2){
             float camToOriginX = easyCam.getPosition().x - easyCam.getTarget().getX();
             float camToOriginY = easyCam.getPosition().y - easyCam.getTarget().getY();
             float camToOriginZ = easyCam.getPosition().z - easyCam.getTarget().getZ();
@@ -637,16 +335,34 @@ void ofApp::settingCameraPosition() {
         }
 
     }
-    else if(cameraButtonPressedIndex==3) { //MOVE RIGHT
-        easyCam.disableMouseInput();
-        if(isTranslateMode) {
+    else if(cameraButtonPressedIndex==3) { //MOVE RIGHT & ROTATE RIGHT & ORBIT RIGHT
+        //easyCam.disableMouseInput();
+        if(currentCameraModeIndex==0) {
             easyCam.move(easyCam.getSideDir() * 10);
             float x = easyCam.getTarget().getX() + easyCam.getSideDir().x * 10;
             float y = easyCam.getTarget().getY() + easyCam.getSideDir().y * 10;
             float z = easyCam.getTarget().getZ() + easyCam.getSideDir().z * 10;
             easyCam.setTarget(ofVec3f(x, y, z));
         }
-        else {
+        else if(currentCameraModeIndex==1){
+            float targetToOriginX = easyCam.getTarget().getX() - easyCam.getPosition().x;
+            float targetToOriginY = easyCam.getTarget().getY() - easyCam.getPosition().y;
+            float targetToOriginZ = easyCam.getTarget().getZ() - easyCam.getPosition().z;
+            
+            float ux = -easyCam.getYAxis().x;
+            float uy = -easyCam.getYAxis().y;
+            float uz = -easyCam.getYAxis().z;
+            
+            float theta = 0.05;
+            
+            float rotatedX = ((cos(theta) + ux * ux * (1 - cos(theta))) * targetToOriginX + (ux * uy * (1 - cos(theta)) - uz * sin(theta)) * targetToOriginY + (ux * uz * (1 - cos(theta)) + uy * sin(theta)) * targetToOriginZ) + easyCam.getPosition().x;
+            float rotatedY = ((uy * ux * (1 - cos(theta)) + uz * sin(theta)) * targetToOriginX + (cos(theta) + uy * uy * (1 - cos(theta))) * targetToOriginY + (uy * uz * (1 - cos(theta)) - ux * sin(theta)) * targetToOriginZ) + easyCam.getPosition().y;
+            float rotatedZ = ((uz * ux * (1 - cos(theta)) - uy * sin(theta)) * targetToOriginX + (uz * uy * (1 - cos(theta)) + ux * sin(theta)) * targetToOriginY + (cos(theta) + uz * uz * (1 - cos(theta))) * targetToOriginZ) + easyCam.getPosition().z;
+            
+            
+            easyCam.setTarget(ofVec3f(rotatedX, rotatedY, rotatedZ));
+        }
+        else if(currentCameraModeIndex==2) {
             float camToOriginX = easyCam.getPosition().x - easyCam.getTarget().getX();
             float camToOriginY = easyCam.getPosition().y - easyCam.getTarget().getY();
             float camToOriginZ = easyCam.getPosition().z - easyCam.getTarget().getZ();
@@ -665,16 +381,34 @@ void ofApp::settingCameraPosition() {
             easyCam.setTarget(easyCam.getTarget());
         }
     }
-    else if(cameraButtonPressedIndex==4) { //MOVE UP
-        easyCam.disableMouseInput();
-        if(isTranslateMode) {
+    else if(cameraButtonPressedIndex==4) { //MOVE UP & ROTATE UP & ORBIT UP
+        //easyCam.disableMouseInput();
+        if(currentCameraModeIndex==0) {
             easyCam.move(easyCam.getUpDir() * 10);
             float x = easyCam.getTarget().getX() + easyCam.getUpDir().x * 10;
             float y = easyCam.getTarget().getY() + easyCam.getUpDir().y * 10;
             float z = easyCam.getTarget().getZ() + easyCam.getUpDir().z * 10;
             easyCam.setTarget(ofVec3f(x, y, z));
         }
-        else {
+        else if(currentCameraModeIndex==1) {
+            float targetToOriginX = easyCam.getTarget().getX() - easyCam.getPosition().x;
+            float targetToOriginY = easyCam.getTarget().getY() - easyCam.getPosition().y;
+            float targetToOriginZ = easyCam.getTarget().getZ() - easyCam.getPosition().z;
+            
+            float ux = -easyCam.getXAxis().x;
+            float uy = -easyCam.getXAxis().y;
+            float uz = -easyCam.getXAxis().z;
+            
+            float theta = -0.05;
+            float rotatedX = ((cos(theta) + ux * ux * (1 - cos(theta))) * targetToOriginX + (ux * uy * (1 - cos(theta)) - uz * sin(theta)) * targetToOriginY + (ux * uz * (1 - cos(theta)) + uy * sin(theta)) * targetToOriginZ) + easyCam.getPosition().x;
+            float rotatedY = ((uy * ux * (1 - cos(theta)) + uz * sin(theta)) * targetToOriginX + (cos(theta) + uy * uy * (1 - cos(theta))) * targetToOriginY + (uy * uz * (1 - cos(theta)) - ux * sin(theta)) * targetToOriginZ) + easyCam.getPosition().y;
+            float rotatedZ = ((uz * ux * (1 - cos(theta)) - uy * sin(theta)) * targetToOriginX + (uz * uy * (1 - cos(theta)) + ux * sin(theta)) * targetToOriginY + (cos(theta) + uz * uz * (1 - cos(theta))) * targetToOriginZ) + easyCam.getPosition().z;
+            
+            easyCam.setTarget(ofVec3f(rotatedX, rotatedY, rotatedZ));
+            if ((ux > 0 && easyCam.getXAxis().x > 0) || (ux < 0 && easyCam.getXAxis().x < 0))
+                easyCam.roll(180);
+        }
+        else if(currentCameraModeIndex==2) {
             float camToOriginX = easyCam.getPosition().x - easyCam.getTarget().getX();
             float camToOriginY = easyCam.getPosition().y - easyCam.getTarget().getY();
             float camToOriginZ = easyCam.getPosition().z - easyCam.getTarget().getZ();
@@ -691,20 +425,40 @@ void ofApp::settingCameraPosition() {
             
             easyCam.setPosition(rotatedX, rotatedY, rotatedZ);
             easyCam.setTarget(easyCam.getTarget());
-            if(easyCam.getXAxis().x < 0)
+            
+            if ((ux > 0 && easyCam.getXAxis().x < 0) || (ux < 0 && easyCam.getXAxis().x > 0))
                 easyCam.roll(180);
         }
     }
-    else if(cameraButtonPressedIndex==5) { //MOVE DOWN
-        easyCam.disableMouseInput();
-        if(isTranslateMode) {
+    else if(cameraButtonPressedIndex==5) { //MOVE DOWN & ROTATE DOWN & ORBIT DOWN
+        //easyCam.disableMouseInput();
+        if(currentCameraModeIndex==0) {
             easyCam.move(easyCam.getUpDir() * -10);
             float x = easyCam.getTarget().getX() - easyCam.getUpDir().x * 10;
             float y = easyCam.getTarget().getY() - easyCam.getUpDir().y * 10;
             float z = easyCam.getTarget().getZ() - easyCam.getUpDir().z * 10;
             easyCam.setTarget(ofVec3f(x, y, z));
         }
-        else {
+        else if(currentCameraModeIndex==1) {
+            float targetToOriginX = easyCam.getTarget().getX() - easyCam.getPosition().x;
+            float targetToOriginY = easyCam.getTarget().getY() - easyCam.getPosition().y;
+            float targetToOriginZ = easyCam.getTarget().getZ() - easyCam.getPosition().z;
+            
+            float ux = -easyCam.getXAxis().x;
+            float uy = -easyCam.getXAxis().y;
+            float uz = -easyCam.getXAxis().z;
+            
+            float theta = 0.05;
+            
+            float rotatedX = ((cos(theta) + ux * ux * (1 - cos(theta))) * targetToOriginX + (ux * uy * (1 - cos(theta)) - uz * sin(theta)) * targetToOriginY + (ux * uz * (1 - cos(theta)) + uy * sin(theta)) * targetToOriginZ) + easyCam.getPosition().x;
+            float rotatedY = ((uy * ux * (1 - cos(theta)) + uz * sin(theta)) * targetToOriginX + (cos(theta) + uy * uy * (1 - cos(theta))) * targetToOriginY + (uy * uz * (1 - cos(theta)) - ux * sin(theta)) * targetToOriginZ) + easyCam.getPosition().y;
+            float rotatedZ = ((uz * ux * (1 - cos(theta)) - uy * sin(theta)) * targetToOriginX + (uz * uy * (1 - cos(theta)) + ux * sin(theta)) * targetToOriginY + (cos(theta) + uz * uz * (1 - cos(theta))) * targetToOriginZ) + easyCam.getPosition().z;
+            
+            easyCam.setTarget(ofVec3f(rotatedX, rotatedY, rotatedZ));
+            if ((ux > 0 && easyCam.getXAxis().x > 0) || (ux < 0 && easyCam.getXAxis().x < 0))
+                easyCam.roll(180);
+        }
+        else if(currentCameraModeIndex==2){
             float camToOriginX = easyCam.getPosition().x - easyCam.getTarget().getX();
             float camToOriginY = easyCam.getPosition().y - easyCam.getTarget().getY();
             float camToOriginZ = easyCam.getPosition().z - easyCam.getTarget().getZ();
@@ -721,12 +475,13 @@ void ofApp::settingCameraPosition() {
             
             easyCam.setPosition(rotatedX, rotatedY, rotatedZ);
             easyCam.setTarget(easyCam.getTarget());
-            if(easyCam.getXAxis().x < 0)
+            
+            if ((ux > 0 && easyCam.getXAxis().x < 0) || (ux < 0 && easyCam.getXAxis().x > 0))
                 easyCam.roll(180);
         }
     }
     else {
-        if(!easyCam.getMouseInputEnabled()) {
+        /*if(!easyCam.getMouseInputEnabled()) {
             easyCam.enableMouseInput();
             if(panelClickIndex == -1) {
                 ofNode t = easyCam.getTarget();
@@ -739,7 +494,7 @@ void ofApp::settingCameraPosition() {
                 if(v!=easyCam.getXAxis())
                     easyCam.roll(180);
             }
-        }
+        }*/
     }
 }
 
@@ -799,6 +554,7 @@ void ofApp::renderCustomModel() {
             continue;
         
         /////////////////////// 2-1. Make 'Shadow Map' as Texture ///////////////////////
+        projectors[i]->allocateShadowFbo();
         projectors[i]->shadowFbo.begin();
         projectors[i]->clearShadowFbo();
         depthStoringShader.begin();
@@ -842,6 +598,9 @@ void ofApp::renderCustomModel() {
         
         textureProjectionShader.end();
         projectors[i]->resultFbo.end();
+        
+        projectors[i]->shadowFbo.clear();
+        projectors[i]->textureFbo.clear();
     }
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////
     
@@ -856,15 +615,23 @@ void ofApp::renderCustomModel() {
         fbo.clear();
         ofEnableBlendMode(OF_BLENDMODE_ADD);
         
-        for(int i=0; i<projectors.size(); i++)
-        if(projectors[i]->isSetted && projectors[i]->videoPlayer.isLoaded())
-            projectors[i]->resultFbo.draw(0,0);
+        for(int i=0; i<projectors.size(); i++) {
+            if(projectors[i]->isSetted && projectors[i]->videoPlayer.isLoaded())
+                projectors[i]->resultFbo.draw(0,0);
+        }
+        
         ofDisableBlendMode();
-    
         ofEnableDepthTest();
         easyCam.begin();
+        
+        ofDrawLine(modelPivotPoint.x,0,0,modelPivotPoint.x,modelHeight,0);
+        ofDrawBitmapString("Calculate distance from here", modelPivotPoint.x,modelHeight,0);
     }
     /////////////////////////////////////////////////////////////////
+    
+    for(int i=0; i<projectors.size(); i++)
+        if(projectors[i]->videoPlayer.isLoaded())
+            projectors[i]->resultFbo.clear();
 }
 
 void ofApp::renderProjectorModel() {
@@ -973,6 +740,7 @@ void ofApp::reconstructMesh() {
     float highestY = -3000;
     float lowestY = 3000;
     float closestZ = -3000;
+    float bottomLeftestX = 3000;
     
     for(int i = 0; i < model.getMeshCount(); i++) {
         for(int j=0; j<meshes[i].getNumVertices(); j++) {
@@ -984,8 +752,11 @@ void ofApp::reconstructMesh() {
                 rightestX = vert.x;
             if(vert.y > highestY)
                 highestY = vert.y;
-            if(vert.y < lowestY)
+            if(vert.y < lowestY) {
                 lowestY = vert.y;
+                if(vert.x < bottomLeftestX)
+                    bottomLeftestX = vert.x;
+            }
             if(vert.z > closestZ)
                 closestZ = vert.z;
         }
@@ -993,9 +764,10 @@ void ofApp::reconstructMesh() {
     
     modelWidth = abs(rightestX - leftestX);
     modelHeight = abs(highestY - lowestY);
+    modelPivotPoint = ofPoint(bottomLeftestX, 0, 0);
     
-    model.setPosition(-leftestX,-lowestY,-closestZ);
-    //model.setPosition(0, -lowestY, -closestZ);
+    //model.setPosition(-leftestX,-lowestY,-closestZ);
+    model.setPosition(0, -lowestY, -closestZ);
     
     for(int i = 0; i < model.getMeshCount(); i++) {
         //DO AGAIN
@@ -1007,11 +779,11 @@ void ofApp::reconstructMesh() {
         for(int j = 0; j < meshes[i].getNumVertices(); j++) {
             //translate vertices and normals
             ofVec3f& vert = meshes[i].getVertices()[j];
-            vert += ofVec3f(-leftestX, -lowestY, -closestZ);
-            //vert += ofVec3f(0, -lowestY, -closestZ);
+            //vert += ofVec3f(-leftestX, -lowestY, -closestZ);
+            vert += ofVec3f(0, -lowestY, -closestZ);
             ofVec3f& norm = meshes[i].getNormals()[j];
-            norm += ofVec3f(-leftestX, -lowestY, -closestZ);
-            //norm += ofVec3f(0, -lowestY, -closestZ);
+            //norm += ofVec3f(-leftestX, -lowestY, -closestZ);
+            norm += ofVec3f(0, -lowestY, -closestZ);
         }
     }
 }
@@ -1138,10 +910,54 @@ void ofApp::drawButtons() {
         ofSetColor(0,0,0);
     }
     
-    if(isTranslateMode)
+    if(currentCameraModeIndex==0)
         ofDrawBitmapString("Translate", 25, ofGetHeight()/2 + 15);
-    else
+    else if(currentCameraModeIndex==1)
+        ofDrawBitmapString("Rotate", 30, ofGetHeight()/2 + 15);
+    else if(currentCameraModeIndex==2)
         ofDrawBitmapString("Orbit", 30, ofGetHeight()/2 + 15);
+    ofPopStyle();
+    
+    if(isCameraMenuClicked) {
+        if(cameraModeHoverIndex==0) {
+            cameraTopMenuHover.draw(23, ofGetHeight()/2 + 20, cameraMenu.getWidth()/2, cameraMenu.getHeight()/3*2);
+            ofPushStyle();
+            ofSetColor(255, 255, 255);
+        }
+        else {
+            cameraTopMenu.draw(23, ofGetHeight()/2 + 20, cameraMenu.getWidth()/2, cameraMenu.getHeight()/3*2);
+            ofPushStyle();
+            ofSetColor(0, 0, 0);
+        }
+        ofDrawBitmapString("Translate", 25, ofGetHeight()/2 + 34);
+        ofPopStyle();
+        
+        if(cameraModeHoverIndex==1) {
+            cameraCenterMenuHover.draw(23, ofGetHeight()/2 + 20 + cameraMenu.getHeight()/3*2, cameraMenu.getWidth()/2, cameraMenu.getHeight()/3*2);
+            ofPushStyle();
+            ofSetColor(255, 255, 255);
+        }
+        else {
+            cameraCenterMenu.draw(23, ofGetHeight()/2 + 20 + cameraMenu.getHeight()/3*2, cameraMenu.getWidth()/2, cameraMenu.getHeight()/3*2);
+            ofPushStyle();
+            ofSetColor(0, 0, 0);
+        }
+        ofDrawBitmapString("Rotate", 33, ofGetHeight()/2 + 34 + cameraMenu.getHeight()/3*2);
+        ofPopStyle();
+        
+        if(cameraModeHoverIndex==2) {
+            cameraBottomMenuHover.draw(23, ofGetHeight()/2 + 20 + cameraMenu.getHeight()/3*2 * 2, cameraMenu.getWidth()/2, cameraMenu.getHeight()/3*2);
+            ofPushStyle();
+            ofSetColor(255, 255, 255);
+        }
+        else {
+            cameraBottomMenu.draw(23, ofGetHeight()/2 + 20 + cameraMenu.getHeight()/3*2 * 2, cameraMenu.getWidth()/2, cameraMenu.getHeight()/3*2);
+            ofPushStyle();
+            ofSetColor(0, 0, 0);
+        }
+        ofDrawBitmapString("Orbit", 33, ofGetHeight()/2 + 34 + cameraMenu.getHeight()/3*2 * 2);
+        ofPopStyle();
+    }
     ofPopStyle();
 }
 
@@ -1232,62 +1048,78 @@ void ofApp::drawPanel() {
         ofDrawBitmapString(ofToString(yRotation), 550, 720);
         ofDrawBitmapString(ofToString(zRotation), 550, 750);
         
-        panelGrayBar.draw(90, 590, 450, 10);
-        panelGrayBar.draw(90, 620, 450, 10);
-        panelGrayBar.draw(90, 650, 450, 10);
-        panelGrayBar.draw(90, 680, 450, 10);
-        panelGrayBar.draw(90, 710, 450, 10);
-        panelGrayBar.draw(90, 740, 450, 10);
+        panelGrayBar.draw(90, 590, 400, 10);
+        panelGrayBar.draw(90, 620, 400, 10);
+        panelGrayBar.draw(90, 650, 400, 10);
+        panelGrayBar.draw(90, 680, 400, 10);
+        panelGrayBar.draw(90, 710, 400, 10);
+        panelGrayBar.draw(90, 740, 400, 10);
         
         float lengthRatio = (xPos + 3000) / 6000;
-        float barLength = 450 * lengthRatio;
+        float barLength = 400 * lengthRatio;
         panelGreenBar.draw(90, 590, barLength, 10);
         panelSliderButton.draw(90 + barLength - 10, 585, 20, 20);
         lengthRatio = (yPos + 3000) / 6000;
-        barLength = 450 * lengthRatio;
+        barLength = 400 * lengthRatio;
         panelGreenBar.draw(90, 620, barLength, 10);
         panelSliderButton.draw(90 + barLength - 10, 615, 20, 20);
         lengthRatio = (zPos + 3000) / 6000;
-        barLength = 450 * lengthRatio;
+        barLength = 400 * lengthRatio;
         panelGreenBar.draw(90, 650, barLength, 10);
         panelSliderButton.draw(90 + barLength - 10, 645, 20, 20);
         lengthRatio = (xRotation + 360) / 720;
-        barLength = 450 * lengthRatio;
+        barLength = 400 * lengthRatio;
         panelGreenBar.draw(90, 680, barLength, 10);
         panelSliderButton.draw(90 + barLength - 10, 675, 20, 20);
         lengthRatio = (yRotation + 360) / 720;
-        barLength = 450 * lengthRatio;
+        barLength = 400 * lengthRatio;
         panelGreenBar.draw(90, 710, barLength, 10);
         panelSliderButton.draw(90 + barLength - 10, 705, 20, 20);
         lengthRatio = (zRotation + 360) / 720;
-        barLength = 450 * lengthRatio;
+        barLength = 400 * lengthRatio;
         panelGreenBar.draw(90, 740, barLength, 10);
         panelSliderButton.draw(90 + barLength - 10, 735, 20, 20);
+        
+        for(int i=0; i<6; i++) {
+            if(panelMinusClickIndex==i) {
+                panelButtonMinusPressed.draw(500, 587 + 30 * i, 15, 15);
+            }
+            else {
+                panelButtonMinus.draw(500, 587 + 30 * i, 15, 15);
+            }
+            
+            if(panelPlusClickIndex==i) {
+                panelButtonPlusPressed.draw(500 + 20, 587 + 30 * i, 15, 15);
+            }
+            else {
+                panelButtonPlus.draw(500 + 20, 587 + 30 * i, 15, 15);
+            }
+        }
         
         //panelWindow.draw(660, ofGetHeight() - 200, 400, 190);
         string str = "current selected projector : ";
         str += ofToString(currentSelectedProjector);
         str += "\n";
         
-        str += "offset from modeling : ";
-        str += ofToString(projectors[currentSelectedProjector]->zPos/100);
+        str += "distance from modeling : ";
+        str += ofToString(projectors[currentSelectedProjector]->zPos / 100);
         str += "M\n";
         
-        if(projectors[currentSelectedProjector]->xPos < 0) {
-            str += "left offset from modeling : ";
-            str += ofToString(projectors[currentSelectedProjector]->xPos/100 * -1);
+        if(projectors[currentSelectedProjector]->xPos < modelPivotPoint.x) {
+            str += "left distance from pivot point : ";
+            str += ofToString(abs(modelPivotPoint.x - projectors[currentSelectedProjector]->xPos) / 100);
             str += "M\n";
         }
-        else if(projectors[currentSelectedProjector]->xPos > 0) {
-            str += "right offset from modeling : ";
-            str += ofToString(projectors[currentSelectedProjector]->xPos/100);
+        else if(projectors[currentSelectedProjector]->xPos > modelPivotPoint.x) {
+            str += "right distance from pivot point : ";
+            str += ofToString(abs(modelPivotPoint.x - projectors[currentSelectedProjector]->xPos) / 100);
             str += "M\n";
         }
         
-        str += "upper offset from ground : ";
-        str += ofToString(projectors[currentSelectedProjector]->yPos/100);
+        str += "upper distance from ground : ";
+        str += ofToString(projectors[currentSelectedProjector]->yPos / 100);
         str += "M\n";
-        ofDrawBitmapString(str, 680, 625);
+        ofDrawBitmapString(str, 630, 625);
     }
     else if(isModelingSelected==1) {
         panelWindow.draw(10, ofGetHeight() - 200, ofGetWidth() - 20, 190);
@@ -1300,14 +1132,42 @@ void ofApp::drawPanel() {
         
         float currentScale = model.getScale().x;
         float lengthRatio = (currentScale) / 50;
-        float barLength = 450 * lengthRatio;
+        float barLength = 400 * lengthRatio;
         ofDrawBitmapString("Scale Factor", 20, ofGetHeight() - 85);
         ofDrawBitmapString(ofToString(currentScale), 575, ofGetHeight() - 85);
         
-        panelGrayBar.draw(120, ofGetHeight() - 95, 450, 10);
+        panelGrayBar.draw(120, ofGetHeight() - 95, 400, 10);
         panelGreenBar.draw(120, ofGetHeight() - 95, barLength, 10);
         panelSliderButton.draw(120 + barLength - 10, ofGetHeight() - 100, 20, 20);
+        
+        if(panelMinusClickIndex==6) {
+            panelButtonMinusPressed.draw(530, ofGetHeight() - 150 + 50, 15, 15);
+        }
+        else {
+            panelButtonMinus.draw(530, ofGetHeight() - 150 + 50, 15, 15);
+        }
+        
+        if(panelPlusClickIndex==6) {
+            panelButtonPlusPressed.draw(530 + 20, ofGetHeight() - 150 + 50, 15, 15);
+        }
+        else {
+            panelButtonPlus.draw(530 + 20, ofGetHeight() - 150 + 50, 15, 15);
+        }
     }
+}
+
+void ofApp::clearProject() {
+    for(int i=0; i<projectors.size(); i++) {
+        if(projectors[i]->isSetted)
+            projectors[i]->deactivate();
+    }
+    //projectors.clear();
+    
+    meshes.clear();
+    model.clear();
+    isModelingSelected = -1;
+    currentSelectedProjector = -1;
+    mappingGUI->projector = NULL;
 }
 
 void ofApp::save() {
@@ -1476,4 +1336,540 @@ void ofApp::scaleModeling(float factor) {
 
 void ofApp::closeApp(ofEventArgs &args) {
     exit();
+}
+
+void ofApp::dropDownMoveEventCheck(int x, int y) {
+    if(isGridDropDownOn || isProjectorDropDownOn) {
+        if(x > clickedCoord.x && x < clickedCoord.x + 144) {
+            if(isGridDropDownOn) {
+                gridDropDownHoverIndex = -1;
+                for(int i = 0; i < sizeof(gridDropDown)/sizeof(gridDropDown[0]); i++) {
+                    if(y > clickedCoord.y + (20 * i) && y <= clickedCoord.y + 20 + (20 * i)) {
+                        gridDropDownHoverIndex = i;
+                        break;
+                    }
+                }
+            }
+            else if(isProjectorDropDownOn) {
+                projectorDropDownHoverIndex = -1;
+                for(int i = 0; i < sizeof(projectorDropDown)/sizeof(projectorDropDown[0]); i++) {
+                    if(y > clickedCoord.y + (20 * i) && y <= clickedCoord.y + 20 + (20 * i)) {
+                        projectorDropDownHoverIndex = i;
+                        break;
+                    }
+                }
+            }
+        }
+        else {
+            gridDropDownHoverIndex = -1;
+            projectorDropDownHoverIndex = -1;
+        }
+    }
+}
+
+void ofApp::dropDownClickEventCheck(int x, int y, int button) {
+    if(button != OF_MOUSE_BUTTON_LEFT)
+        return ;
+    
+    if(isGridDropDownOn) {
+        switch(gridDropDownHoverIndex) {
+            case 0 : {
+                ofVec3f pt = findNearGridPoint(ofPoint(x,y));
+                addProjector(pt.x, pt.y, pt.z);
+                break;
+            }
+        }
+        gridDropDownHoverIndex = -1;
+        isGridDropDownOn = false;
+    }
+    else if(isProjectorDropDownOn) {
+        switch(projectorDropDownHoverIndex) {
+            case 0 : {
+                if(currentSelectedProjector != -1) {
+                    //easyCam.disableMouseInput();
+                    ofFileDialogResult openFileResult = ofSystemLoadDialog("Select Video file");
+                    
+                    if(openFileResult.bSuccess)
+                        openVideoFile(openFileResult);
+                }
+                break;
+            }
+            case 1 : {
+                if(currentSelectedProjector != -1)
+                    deleteProjector(currentSelectedProjector);
+                break;
+            }
+        }
+        projectorDropDownHoverIndex = -1;
+        isProjectorDropDownOn = false;
+    }
+}
+
+void ofApp::cameraMoveEventCheck(int x, int y) {
+    if(isCameraMenuClicked) {
+        float currentYPos = ofGetHeight()/2 + 20;
+        if(x > 23 && x <= 23 + cameraMenu.getWidth()/2) {
+            for(int i=0; i<3; i++) {
+                cameraModeHoverIndex = -1;
+                if(y > currentYPos && y <= currentYPos + cameraMenu.getHeight()/3*2) {
+                    cameraModeHoverIndex = i;
+                    break;
+                }
+                currentYPos += cameraMenu.getHeight()/3*2;
+            }
+        }
+        else
+            cameraModeHoverIndex = -1;
+    }
+}
+
+void ofApp::cameraClickEventCheck(int x, int y, int button) {
+    if(button != OF_MOUSE_BUTTON_LEFT)
+        return ;
+    
+    //3/4 version
+    if(y > (ofGetHeight()/2 - 200)/4*3 && y <= (ofGetHeight()/2 - 200 + cameraZoomBackground.getHeight())/4*3) {
+        isCameraMenuClicked = false;
+        if(x > 56/4*3 && x <= (56 + 56)/4*3) {
+            if(y > (ofGetHeight()/2 - 192)/4*3 && y <= (ofGetHeight()/2 - 192 + 72)/4*3)
+                cameraButtonPressedIndex = 0;
+            else if(y > (ofGetHeight()/2 - 192 + 72)/4*3 && y <= (ofGetHeight()/2 - 192 + (72 * 2))/4*3)
+                cameraButtonPressedIndex = 1;
+            else
+                cameraButtonPressedIndex = -1;
+        }
+    }
+    else if(y > ofGetHeight()/2/4*3 && y <= (ofGetHeight()/2 + cameraMoveBackground.getHeight())/4*3) {
+        isCameraMenuClicked = false;
+        if(y > (ofGetHeight()/2 + 45)/4*3 && y <= (ofGetHeight()/2 + 45 + cameraButton[2].getHeight())/4*3) {
+            if(x > 28/4*3 && x <= (28 + cameraButton[2].getWidth())/4*3)
+                cameraButtonPressedIndex = 2;
+            else if(x > 106/4*3 && x <= (106 + cameraButton[2].getWidth())/4*3)
+                cameraButtonPressedIndex = 3;
+            else
+                cameraButtonPressedIndex = -1;
+        }
+        else if(x > 67/4*3 && x <= (67 + cameraButton[2].getWidth())/4*3) {
+            if(y > (ofGetHeight()/2 + 5)/4*3 && y <= (ofGetHeight()/2 + 5 + cameraButton[2].getHeight())/4*3)
+                cameraButtonPressedIndex = 4;
+            else if(y > (ofGetHeight()/2 + 81)/4*3 && y <= (ofGetHeight()/2 + 81 + cameraButton[2].getHeight())/4*3)
+                cameraButtonPressedIndex = 5;
+            else
+                cameraButtonPressedIndex = -1;
+        }
+        else
+            cameraButtonPressedIndex = -1;
+    }
+    else if(y > ofGetHeight()/2 && y <= (ofGetHeight()/2 + cameraMenu.getHeight()/3*2)) {
+        if(x > 23 && x <= 23 + cameraMenu.getWidth()/2) {
+            isTranslateMode = !isTranslateMode;
+            isCameraMenuClicked = true;
+        }
+    }
+    else {
+        if(isCameraMenuClicked) {
+            isCameraMenuClicked = false;
+            if(cameraModeHoverIndex != -1) {
+                currentCameraModeIndex = cameraModeHoverIndex;
+                cameraModeHoverIndex = -1;
+            }
+        }
+    }
+}
+
+void ofApp::panelClickEventCheck(int x, int y, int button) {
+    if(button != OF_MOUSE_BUTTON_LEFT)
+        return ;
+    
+    if(currentSelectedProjector != -1 && panelClickIndex == -1) {
+        if(y > 590 && y <= 600) {
+            float xPos = projectors[currentSelectedProjector]->xPos;
+            float lengthRatio = (xPos + 3000) / 6000;
+            float barLength = 400 * lengthRatio;
+            if(x > 90 + barLength - 10 && x <= 90 + barLength + 10) {
+                panelClickIndex = 0;
+                //easyCam.disableMouseInput();
+            }
+        }
+        else if(y > 620 && y <= 630) {
+            float yPos = projectors[currentSelectedProjector]->yPos;
+            float lengthRatio = (yPos + 3000) / 6000;
+            float barLength = 400 * lengthRatio;
+            if(x > 90 + barLength - 10 && x <= 90 + barLength + 10) {
+                panelClickIndex = 1;
+                //easyCam.disableMouseInput();
+            }
+        }
+        else if(y > 650 && y <= 660) {
+            float zPos = projectors[currentSelectedProjector]->zPos;
+            float lengthRatio = (zPos + 3000) / 6000;
+            float barLength = 400 * lengthRatio;
+            if(x > 90 + barLength - 10 && x <= 90 + barLength + 10) {
+                panelClickIndex = 2;
+                //easyCam.disableMouseInput();
+            }
+        }
+        else if(y > 680 && y <= 690) {
+            float xRotation = projectors[currentSelectedProjector]->xRotation;
+            float lengthRatio = (xRotation + 360) / 720;
+            float barLength = 400 * lengthRatio;
+            if(x > 90 + barLength - 10 && x <= 90 + barLength + 10) {
+                panelClickIndex = 3;
+                //easyCam.disableMouseInput();
+            }
+        }
+        else if(y > 710 && y <= 720) {
+            float yRotation = projectors[currentSelectedProjector]->yRotation;
+            float lengthRatio = (yRotation + 360) / 720;
+            float barLength = 400 * lengthRatio;
+            if(x > 90 + barLength - 10 && x <= 90 + barLength + 10) {
+                panelClickIndex = 4;
+                //easyCam.disableMouseInput();
+            }
+        }
+        else if(y > 740 && y <= 750) {
+            float zRotation = projectors[currentSelectedProjector]->zRotation;
+            float lengthRatio = (zRotation + 360) / 720;
+            float barLength = 400 * lengthRatio;
+            if(x > 90 + barLength - 10 && x <= 90 + barLength + 10) {
+                panelClickIndex = 5;
+                //easyCam.disableMouseInput();
+            }
+        }
+        
+        for(int i=0; i<6; i++) {
+            if(y > 587 + 30 * i && y <= 587 + 30 * i + 15) {
+                if(x > 500 && x <= 500 + 15)
+                    panelMinusClickIndex = i;
+                else if(x > 500 + 20 && x <= 500 + 20 + 15)
+                    panelPlusClickIndex = i;
+            }
+        }
+    }
+    else if(isModelingSelected == 1) {
+        if(y > ofGetHeight() - 95 && y <= ofGetHeight() - 85) {
+            float currentScale = model.getScale().x;
+            float lengthRatio = currentScale / 50;
+            float barLength = 400 * lengthRatio;
+            if(x > 120 + barLength - 10 && x <= 120 + barLength + 10) {
+                panelClickIndex = 6;
+                //easyCam.disableMouseInput();
+            }
+        }
+        
+        if(y > ofGetHeight() - 150 + 50 && y <= ofGetHeight() - 150 + 50 + 15) {
+            if(x > 530 && x <= 530 + 15)
+                panelMinusClickIndex = 6;
+            else if(x > 530 + 20 && x <= 530 + 20 + 15)
+                panelPlusClickIndex = 6;
+        }
+        
+    }
+}
+
+void ofApp::panelDragEventCheck(int x, int y, int button) {
+    if(currentSelectedProjector != -1 && button == OF_MOUSE_BUTTON_LEFT) {
+        if(x >= 90 && x <= 90 + 400) {
+            if(panelClickIndex == 0) {
+                float realValue = (float)(x - 90) / 400 * 6000 - 3000;
+                projectors[currentSelectedProjector]->xPos = floor(realValue);
+            }
+            else if(panelClickIndex == 1) {
+                float realValue = (float)(x - 90) / 400 * 6000 - 3000;
+                projectors[currentSelectedProjector]->yPos = floor(realValue);
+            }
+            else if(panelClickIndex == 2) {
+                float realValue = (float)(x - 90) / 400 * 6000 - 3000;
+                projectors[currentSelectedProjector]->zPos = floor(realValue);
+            }
+            else if(panelClickIndex == 3) {
+                float realValue = (float)(x - 90) / 400 * 720 - 360;
+                projectors[currentSelectedProjector]->xRotation = floor(realValue);
+            }
+            else if(panelClickIndex == 4) {
+                float realValue = (float)(x - 90) / 400 * 720 - 360;
+                projectors[currentSelectedProjector]->yRotation = floor(realValue);
+            }
+            else if(panelClickIndex == 5) {
+                float realValue = (float)(x - 90) / 400 * 720 - 360;
+                projectors[currentSelectedProjector]->zRotation = floor(realValue);
+            }
+        }
+    }
+    else if(isModelingSelected && panelClickIndex == 6 && button == OF_MOUSE_BUTTON_LEFT) {
+        if(x >= 120 && x <= 120 + 400) {
+            float realValue = (float)(x - 120) / 400 * 50;
+            float offset = realValue - model.getScale().x;
+            scaleModeling(offset);
+        }
+    }
+}
+
+void ofApp::panelReleaseEventCheck(int x, int y, int button) {
+    if(panelClickIndex != -1)
+        panelClickIndex = -1;
+    if(panelPlusClickIndex != -1) {
+        switch(panelPlusClickIndex) {
+            case 0 : {
+                if(projectors[currentSelectedProjector]->xPos < 3000)
+                    projectors[currentSelectedProjector]->xPos++;
+                break;
+            }
+            case 1 : {
+                if(projectors[currentSelectedProjector]->yPos < 3000)
+                    projectors[currentSelectedProjector]->yPos++;
+                break;
+            }
+            case 2 : {
+                if(projectors[currentSelectedProjector]->zPos < 3000)
+                    projectors[currentSelectedProjector]->zPos++;
+                break;
+            }
+            case 3 : {
+                if(projectors[currentSelectedProjector]->xRotation < 360)
+                    projectors[currentSelectedProjector]->xRotation++;
+                break;
+            }
+            case 4 : {
+                if(projectors[currentSelectedProjector]->yRotation < 360)
+                    projectors[currentSelectedProjector]->yRotation++;
+                break;
+            }
+            case 5 : {
+                if(projectors[currentSelectedProjector]->zRotation < 360)
+                    projectors[currentSelectedProjector]->zRotation++;
+                break;
+            }
+            case 6 : {
+                if(model.getScale().x < 49.99)
+                    scaleModeling(0.01);
+                break;
+            }
+        }
+        panelPlusClickIndex = -1;
+    }
+    if(panelMinusClickIndex != -1) {
+        switch(panelMinusClickIndex) {
+            case 0 : {
+                if(projectors[currentSelectedProjector]->xPos > -3000)
+                    projectors[currentSelectedProjector]->xPos--;
+                break;
+            }
+            case 1 : {
+                if(projectors[currentSelectedProjector]->yPos > -3000)
+                    projectors[currentSelectedProjector]->yPos--;
+                break;
+            }
+            case 2 : {
+                if(projectors[currentSelectedProjector]->zPos > -3000)
+                    projectors[currentSelectedProjector]->zPos--;
+                break;
+            }
+            case 3 : {
+                if(projectors[currentSelectedProjector]->xRotation > -360)
+                    projectors[currentSelectedProjector]->xRotation--;
+                break;
+            }
+            case 4 : {
+                if(projectors[currentSelectedProjector]->yRotation > -360)
+                    projectors[currentSelectedProjector]->yRotation--;
+                break;
+            }
+            case 5 : {
+                if(projectors[currentSelectedProjector]->zRotation > -360)
+                    projectors[currentSelectedProjector]->zRotation--;
+                break;
+            }
+            case 6 : {
+                if(model.getScale().x > 0.01)
+                    scaleModeling(-0.01);
+                break;
+            }
+        }
+        panelMinusClickIndex = -1;
+    }
+}
+
+void ofApp::headerMoveEventCheck(int x, int y) {
+    switch(headerHoverIndex) {
+            //resized resource version (original size to 3/4)
+        case 0 : {
+            float currentYPos = 20 + headerMenu[0].getHeight()/4*3;
+            if(x > ofGetWidth() - 200 && x <= ofGetWidth() - 200 + subMenuFile[0].getWidth()/4*3) {
+                for(int i=0; i<sizeof(subFileHover)/sizeof(subFileHover[0]); i++) {
+                    subFileHoverIndex = -1;
+                    if(y > currentYPos && y <= currentYPos + subMenuFile[i].getHeight()/4*3) {
+                        subFileHoverIndex = i;
+                        break;
+                    }
+                    currentYPos += subMenuFile[i].getHeight()/4*3;
+                }
+            }
+            else
+                subFileHoverIndex = -1;
+            break;
+        }
+        case 1 : {
+            float currentYPos = 20 + headerMenu[0].getHeight()/4*3;
+            if(x > ofGetWidth() - 200 && x <= ofGetWidth() - 200 + subMenuFile[0].getWidth()/4*3) {
+                for(int i=0; i<sizeof(subModelingHover)/sizeof(subModelingHover[0]); i++) {
+                    subModelingHoverIndex = -1;
+                    if(y > currentYPos && y <= currentYPos + subMenuModeling[i].getHeight()/4*3) {
+                        subModelingHoverIndex = i;
+                        break;
+                    }
+                    currentYPos += subMenuModeling[i].getHeight()/4*3;
+                }
+            }
+            else
+                subModelingHoverIndex = -1;
+            break;
+        }
+    }
+}
+
+void ofApp::headerClickEventCheck(int x, int y, int button) {
+    if(button != OF_MOUSE_BUTTON_LEFT)
+        return ;
+    
+    if(y > 20 && y <= 20 + (headerMenu[0].getHeight())/4*3) { //3/4 version
+        for(int i = 0; i < sizeof(headerHover)/sizeof(headerHover[0]); i++) {
+            headerHoverIndex = -1;
+            if(i != 0) {
+                if(x > ofGetWidth() - 200 + (headerMenu[i-1].getWidth())/4*3 && x <= ofGetWidth() - 200 + (headerMenu[i-1].getWidth() + headerMenu[i].getWidth())/4*3) {
+                    headerHoverIndex = i;
+                    break;
+                }
+            }
+            else {
+                if(x > ofGetWidth() - 200 && x <= ofGetWidth() - 200 + (headerMenu[i].getWidth())/4*3) {
+                    headerHoverIndex = i;
+                    break;
+                }
+            }
+        }
+    }
+    else
+        headerHoverIndex = -1;
+}
+
+void ofApp::subClickEventCheck(int x, int y, int button) {
+    if(button != OF_MOUSE_BUTTON_LEFT)
+        return ;
+    
+    switch(subFileHoverIndex) {
+        case 0 : {
+            //ofLog() << "menu 1";
+            clearProject();
+            break;
+        }
+        case 1 : {
+            //ofLog() << "menu 2";
+            //easyCam.disableMouseInput();
+            save();
+            break;
+        }
+        case 2 : {
+            //ofLog() << "menu 3";
+            //easyCam.disableMouseInput();
+            load();
+            break;
+        }
+            //subFileHoverIndex = -1;
+    }
+    subFileHoverIndex = -1;
+    
+    switch(subModelingHoverIndex) {
+        case 0 : {
+            //ofLog() << "menu 1";
+            //easyCam.disableMouseInput();
+            ofFileDialogResult openFileResult = ofSystemLoadDialog("Select 3d file");
+            if(openFileResult.bSuccess)
+                open3DFile(openFileResult);
+            subModelingHoverIndex = -1;
+            break;
+        }
+    }
+}
+
+void ofApp::labelClickEventCheck(int x, int y, int button) {
+    if(button != OF_MOUSE_BUTTON_LEFT)
+        return ;
+    
+    if(y > ofGetHeight() - 200 && y <= ofGetHeight() - 200 + 18) {
+        int index = 0;
+        for(int i=0; i<projectors.size(); i++) {
+            if(x > 10 + (90 * i) && x <= 10 + (90 * (i + 1))) {
+                index = i;
+                break;
+            }
+        }
+        int currentIndex = 0;
+        for(int i=0; i<projectors.size(); i++) {
+            if(projectors[i]->isSetted) {
+                if(currentIndex == index) {
+                    if(currentSelectedProjector != -1 && currentSelectedProjector != i)
+                        projectors[currentSelectedProjector]->isSelected = false;
+                    currentSelectedProjector = i;
+                    projectors[currentSelectedProjector]->isSelected = true;
+                    mappingGUI->setProjector(projectors[currentSelectedProjector]);
+                    break;
+                }
+                else
+                    currentIndex++;
+            }
+        }
+    }
+}
+
+void ofApp::objectClickEventCheck(int x, int y, int button) {
+    if(button == OF_MOUSE_BUTTON_LEFT) {
+        int nearestIndex = findNearProjectorIndex(ofVec2f(x,y));
+        if(nearestIndex != -1) {
+            if(currentSelectedProjector == nearestIndex) {
+                projectors[nearestIndex]->isSelected = false;
+                currentSelectedProjector = -1;
+            
+                mappingGUI->projector = NULL;
+            }
+            else {
+                if(currentSelectedProjector != -1)
+                    projectors[currentSelectedProjector]->isSelected = false;
+            
+                projectors[nearestIndex]->isSelected = true;
+                currentSelectedProjector = nearestIndex;
+            
+                //if(projectors[currentSelectedProjector]->videoPlayer.isLoaded())
+                mappingGUI->setProjector(projectors[nearestIndex]);
+            }
+            //refreshGUI();
+        }
+        else {
+            if(isModelingSelected == 1) {
+                if(currentSelectedProjector != -1)
+                    projectors[currentSelectedProjector]->isSelected = false;
+                currentSelectedProjector = -1;
+                mappingGUI->projector = NULL;
+            }
+        }
+    }
+    else if(button == OF_MOUSE_BUTTON_RIGHT) {
+        clickedCoord = ofPoint(x,y);
+        int nearestIndex = findNearProjectorIndex(clickedCoord);
+        if(nearestIndex != -1) {
+            isGridDropDownOn = false;
+            if(currentSelectedProjector != nearestIndex) {
+                if(currentSelectedProjector != -1)
+                    projectors[currentSelectedProjector]->isSelected = false;
+                projectors[nearestIndex]->isSelected = true;
+                currentSelectedProjector = nearestIndex;
+                mappingGUI->setProjector(projectors[nearestIndex]);
+            }
+            isProjectorDropDownOn = true;
+        }
+        else {
+            isProjectorDropDownOn = false;
+            isGridDropDownOn = true;
+        }
+    }
 }

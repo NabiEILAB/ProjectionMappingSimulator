@@ -25,7 +25,7 @@ class ofApp : public ofBaseApp{
 		void gotMessage(ofMessage msg);
         void exit();
 		
-    //Additional variables & functions
+    //User defined variables
     public :
         //Easy Camera
         ofEasyCam easyCam;
@@ -44,6 +44,7 @@ class ofApp : public ofBaseApp{
         ofMesh projectorMesh;
         float modelWidth;
         float modelHeight;
+        ofPoint modelPivotPoint;
     
         //Shaders
         ofShader textureProjectionShader;
@@ -74,7 +75,15 @@ class ofApp : public ofBaseApp{
         ofImage cameraButtonPressed[6];
         ofImage cameraMenu;
         ofImage cameraMenuClicked;
+        ofImage cameraTopMenu;
+        ofImage cameraTopMenuHover;
+        ofImage cameraCenterMenu;
+        ofImage cameraCenterMenuHover;
+        ofImage cameraBottomMenu;
+        ofImage cameraBottomMenuHover;
         int cameraButtonPressedIndex;
+        int currentCameraModeIndex;
+        int cameraModeHoverIndex;
         bool isTranslateMode;
         bool isCameraMenuClicked;
     
@@ -91,17 +100,25 @@ class ofApp : public ofBaseApp{
         ofImage panelSliderButton;
         ofImage panelLabel;
         ofImage panelLabelClick;
+        ofImage panelButtonPlus;
+        ofImage panelButtonPlusPressed;
+        ofImage panelButtonMinus;
+        ofImage panelButtonMinusPressed;
         int headerHoverIndex;
         int subFileHoverIndex;
         int subModelingHoverIndex;
         int panelClickIndex;
+        int panelPlusClickIndex;
+        int panelMinusClickIndex;
     
         int currentSelectedProjector;
         int isModelingSelected;
         string currentModelURL;
         bool exiting;
     
-        void refreshGUI();
+    //User defined functions
+    public :
+        //void refreshGUI();
         void addProjector(float x, float y, float z);
         void deleteProjector(int projectorNum);
         void settingCameraPosition();
@@ -117,10 +134,23 @@ class ofApp : public ofBaseApp{
         void drawButtons();
         void drawHeaders();
         void drawPanel();
+        void clearProject();
         void save();
         void load();
         ofVec3f findNearGridPoint(ofPoint mousePt);
         int findNearProjectorIndex(ofPoint mousePt);
         void scaleModeling(float factor);
         void closeApp(ofEventArgs& args);
+        void dropDownMoveEventCheck(int x, int y);
+        void dropDownClickEventCheck(int x, int y, int button);
+        void cameraMoveEventCheck(int x, int y);
+        void cameraClickEventCheck(int x, int y, int button);
+        void panelClickEventCheck(int x, int y, int button);
+        void panelDragEventCheck(int x, int y, int button);
+        void panelReleaseEventCheck(int x, int y, int button);
+        void headerMoveEventCheck(int x, int y);
+        void headerClickEventCheck(int x, int y, int button);
+        void subClickEventCheck(int x, int y, int button);
+        void labelClickEventCheck(int x, int y, int button);
+        void objectClickEventCheck(int x, int y, int button);
 };

@@ -81,7 +81,7 @@ void MappingApp::draw() {
     if(projector->videoPlayer.isLoaded()) {
         texture.draw(points[0],points[1],points[2],points[3]);
         
-        float xRV = ceil(projector->pivotWidth * abs(0 - projector->yPos) / projector->pivotDistance / 2);
+        /*float xRV = ceil(projector->pivotWidth * abs(0 - projector->yPos) / projector->pivotDistance / 2);
         float yRV = ceil(projector->pivotHeight * abs(0 - projector->yPos) / projector->pivotDistance / 2);
         ofVec3f topLeft = ofVec3f(projector->xPos - xRV, projector->yPos + yRV, projector->yPos - abs(0-projector->yPos));
         ofVec3f topRight = ofVec3f(projector->xPos + xRV, projector->yPos + yRV, projector->yPos - abs(0-projector->yPos));
@@ -98,7 +98,7 @@ void MappingApp::draw() {
         ofDrawBitmapString("Height : " + ofToString(h), 400, 80);
         ofDrawBitmapString("Aspect Ratio : " + ofToString(w/h), 400, 90);
         ofDrawBitmapString("Draw Ratio : " + ofToString(w/abs(0 - projector->yPos)), 400, 100);
-        ofDrawBitmapString("FOV : " + ofToString(atan(h / (2 * abs(0 - projector->yPos))) * (180.0 / 3.141592f)), 400, 110);
+        ofDrawBitmapString("FOV : " + ofToString(atan(h / (2 * abs(0 - projector->yPos))) * (180.0 / 3.141592f)), 400, 110);*/
         
         /*ofDisableDepthTest();
         drawPanel();

@@ -10,17 +10,24 @@
 #define Projector_h
 
 #include "ofMain.h"
-#include "ofxOpenCv.h"
+//#include "ofxOpenCv.h"
 
 class Projector {
 public :
-    ofParameterGroup projectorParameters;
+    /*ofParameterGroup projectorParameters;  //ofxGUI version (cancelled)
     ofParameter<float> xPos;
     ofParameter<float> yPos;
     ofParameter<float> zPos;
     ofParameter<float> xRotation;
     ofParameter<float> yRotation;
-    ofParameter<float> zRotation;
+    ofParameter<float> zRotation;*/
+    
+    float xPos;
+    float yPos;
+    float zPos;
+    float xRotation;
+    float yRotation;
+    float zRotation;
     
     //Radiation value of projector's light. - this is a debug value
     float xRadVal;
@@ -57,9 +64,6 @@ public :
     //Projector's product data
     string manufacturerName;
     string modelName;
-    
-    //filter test
-    ofImage filter;
     
     Projector();
     Projector(float xPos, float yPos, float zPos);

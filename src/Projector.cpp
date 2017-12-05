@@ -49,16 +49,15 @@ Projector::Projector(float xPos, float yPos, float zPos, float xRotation, float 
 }
 
 void Projector::setup() {
-    projectorParameters.setName("No." + ofToString(projectorNum) + " Projector");
-    //projectorParameters.add(isPlaying.set("Video Play",false));
+    /*projectorParameters.setName("No." + ofToString(projectorNum) + " Projector");
     projectorParameters.add(xPos.set("X Pos",xPos,-3000,3000));
     projectorParameters.add(yPos.set("Y Pos",yPos,-3000,3000));
     projectorParameters.add(zPos.set("Z Pos",zPos,-3000,3000));
     projectorParameters.add(xRotation.set("X Rotate",xRotation,-360,360));
     projectorParameters.add(yRotation.set("Y Rotate",yRotation,-360,360));
-    projectorParameters.add(zRotation.set("Z Rotate",zRotation,-360,360));
+    projectorParameters.add(zRotation.set("Z Rotate",zRotation,-360,360));*/
     
-    allocateShadowFbo();
+    //allocateShadowFbo();
     
     isSetted = false;
     isSelected = false;
@@ -70,8 +69,6 @@ void Projector::setup() {
     
     manufacturerName = "";
     modelName = "";
-    
-    //filter.load("Lenna.png");
 }
 
 void Projector::update() {
@@ -109,30 +106,17 @@ void Projector::draw() {
     width = abs(topLeft.distance(topRight));
     height = abs(topLeft.distance(bottomLeft));
     
-    allocateTextureFbo(width, height);
-    textureFbo.begin();
-    clearTextureFbo();
     if(videoPlayer.isLoaded()) {
-        /*ofPushStyle();
-        ofColor(255,0,0);
-        ofDrawRectangle(pt[0].x - 50, pt[0].y - 50, 50, 50);
-        ofDrawRectangle(pt[1].x, pt[1].y - 50, 50, 50);
-        ofDrawRectangle(pt[2].x, pt[2].y, 50, 50);
-        ofDrawRectangle(pt[3].x - 50, pt[3].y, 50, 50);
-        ofPopStyle();*/
+        allocateTextureFbo(width, height);
+        textureFbo.begin();
+        clearTextureFbo();
         copiedTexture.draw(pt[3], pt[2], pt[1], pt[0]);
-        
-        //filtering test
-        /*ofEnableAlphaBlending();
-        ofSetColor(255,255,255,100);
-        filter.getTexture().draw(pt[3],pt[2],pt[1],pt[0]);
-        ofDisableAlphaBlending();*/
+        textureFbo.end();
     }
     
     ofPoint points[4];
     ofPoint centerPt;
     centerPt.x = width/2; centerPt.y = height/2;
-    textureFbo.end();
     
     ////////Make matrices for Projective Texturing Mapping
     
@@ -256,4 +240,13 @@ void Projector::deactivate() {
     manufacturerName = "";
     modelName = "";
     videoPlayer.close();
+    
+    if(shadowFbo.isAllocated())
+        shadowFbo.clear();
+    if(textureFbo.isAllocated())
+        textureFbo.clear();
+    if(resultFbo.isAllocated())
+        resultFbo.clear();
+    if(copiedTexture.isAllocated())
+        copiedTexture.clear();
 }
