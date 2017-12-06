@@ -8,7 +8,7 @@
 <br>별도의 윈도우 창을 통해 현재 재생되는 비디오 이미지를 마우스로 왜곡시키며
 <br>왜곡된 비디오 영상은 실시간으로 프로젝션 맵핑에 적용이 된다.
 <br>자세한 설명은 본 프로젝트의 위키 참조 https://github.com/NabiEILAB/ProjectionMappingSimulator/wiki
-<br><img src="wiki/home/homeScreenshot1"></img></br>
+<br><img src="wiki/home/homeScreenshot1.png"></img></br>
 
 
 - TODO
