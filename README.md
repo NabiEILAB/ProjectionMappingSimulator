@@ -9,8 +9,3 @@
 <br>왜곡된 비디오 영상은 실시간으로 프로젝션 맵핑에 적용이 된다.
 <br>자세한 설명은 본 프로젝트의 위키 참조 https://github.com/NabiEILAB/ProjectionMappingSimulator/wiki
 <br><img src="wiki/home/homeScreenshot1.png"></img></br>
-
-
-- TODO
-1. 도량 통일 : 좌표계에서의 1씩 이동을 실세계의 몇cm,m로 환산할지? -> 현재는 좌표상의 1이동을 1cm로 지정할 예정
-2. 3D 모델링의 Scale 계산만은 가능하게끔 UI에 추가하기
