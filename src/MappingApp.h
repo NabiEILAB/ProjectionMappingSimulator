@@ -30,7 +30,8 @@ public :
     void dragEvent(ofDragInfo dragInfo);
     void gotMessage(ofMessage msg);
     
-    //aditional variables & functions
+//user defined variables
+public :
     Projector* projector;
     ofTexture texture;
     
@@ -71,6 +72,8 @@ public :
     ofImage bottomMenuHover;
     ofImage check;
     
+//user defined functions
+public :
     void setProjector(Projector* projector);
     void setWarpingMode();
     void toRealValue();

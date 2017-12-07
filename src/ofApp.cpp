@@ -90,7 +90,6 @@ void ofApp::setup(){
     cameraButtonPressedIndex = -1;
     cameraModeHoverIndex = -1;
     currentCameraModeIndex = 0;
-    isTranslateMode = true;
     isCameraMenuClicked = false;
     
     
@@ -137,6 +136,7 @@ void ofApp::draw(){
     renderProjectorModel();
     
     easyCam.end();
+    //ofDrawBitmapString(ofToString(ofGetFrameRate()), 10, 10);
     
     ofDisableDepthTest();
     ofEnableBlendMode(OF_BLENDMODE_ALPHA);
@@ -624,8 +624,8 @@ void ofApp::renderCustomModel() {
         ofEnableDepthTest();
         easyCam.begin();
         
-        ofDrawLine(modelPivotPoint.x,0,0,modelPivotPoint.x,modelHeight,0);
-        ofDrawBitmapString("Calculate distance from here", modelPivotPoint.x,modelHeight,0);
+        ofDrawLine(modelPivotPoint.x,0,modelPivotPoint.z,modelPivotPoint.x,modelHeight,modelPivotPoint.z);
+        ofDrawBitmapString("Calculate distance from here", modelPivotPoint.x,modelHeight,modelPivotPoint.z);
     }
     /////////////////////////////////////////////////////////////////
     
@@ -740,7 +740,6 @@ void ofApp::reconstructMesh() {
     float highestY = -3000;
     float lowestY = 3000;
     float closestZ = -3000;
-    float bottomLeftestX = 3000;
     
     for(int i = 0; i < model.getMeshCount(); i++) {
         for(int j=0; j<meshes[i].getNumVertices(); j++) {
@@ -752,19 +751,16 @@ void ofApp::reconstructMesh() {
                 rightestX = vert.x;
             if(vert.y > highestY)
                 highestY = vert.y;
-            if(vert.y < lowestY) {
+            if(vert.y < lowestY)
                 lowestY = vert.y;
-                if(vert.x < bottomLeftestX)
-                    bottomLeftestX = vert.x;
-            }
             if(vert.z > closestZ)
                 closestZ = vert.z;
         }
     }
-    
+
+
     modelWidth = abs(rightestX - leftestX);
     modelHeight = abs(highestY - lowestY);
-    modelPivotPoint = ofPoint(bottomLeftestX, 0, 0);
     
     //model.setPosition(-leftestX,-lowestY,-closestZ);
     model.setPosition(0, -lowestY, -closestZ);
@@ -786,6 +782,30 @@ void ofApp::reconstructMesh() {
             norm += ofVec3f(0, -lowestY, -closestZ);
         }
     }
+    
+    float bottomLeftestX = 3000;
+    float bottomClosestZ = -3000;
+    vector<ofVec3f> yCandidates;
+    vector<ofVec3f> zCandidates;
+    for(int i = 0; i < model.getMeshCount(); i++) {
+        for(int j=0; j<meshes[i].getNumVertices(); j++) {
+            ofVec3f& vert = meshes[i].getVertices()[j];
+            if(vert.y<15) {
+                yCandidates.push_back(vert);
+                if(vert.z > bottomClosestZ)
+                    bottomClosestZ = vert.z;
+            }
+        }
+    }
+    for(int i=0; i<yCandidates.size(); i++) {
+        if(yCandidates[i].z == bottomClosestZ) {
+            zCandidates.push_back(yCandidates[i]);
+            if(yCandidates[i].x < bottomLeftestX)
+                bottomLeftestX = yCandidates[i].x;
+        }
+    }
+    modelPivotPoint = ofPoint(bottomLeftestX, 0, bottomClosestZ);
+    //modelPivotPoint = ofPoint(leftestX, 0, 0);
 }
 
 void ofApp::reconstructProjectorMesh() {
@@ -1102,7 +1122,7 @@ void ofApp::drawPanel() {
         str += "\n";
         
         str += "distance from modeling : ";
-        str += ofToString(projectors[currentSelectedProjector]->zPos / 100);
+        str += ofToString(abs(modelPivotPoint.z - projectors[currentSelectedProjector]->zPos) / 100);
         str += "M\n";
         
         if(projectors[currentSelectedProjector]->xPos < modelPivotPoint.x) {
@@ -1125,10 +1145,10 @@ void ofApp::drawPanel() {
         panelWindow.draw(10, ofGetHeight() - 200, ofGetWidth() - 20, 190);
         
         ofDrawBitmapString("Modeling Width : ", ofGetWidth() - 350, ofGetHeight() - 150);
-        ofDrawBitmapString("Modeling Height : ", ofGetWidth() - 350, ofGetHeight() - 140);
+        ofDrawBitmapString("Modeling Height : ", ofGetWidth() - 350, ofGetHeight() - 120);
         
         ofDrawBitmapString(ofToString(modelWidth), ofGetWidth() - 200, ofGetHeight() - 150);
-        ofDrawBitmapString(ofToString(modelHeight), ofGetWidth() - 200, ofGetHeight() - 140);
+        ofDrawBitmapString(ofToString(modelHeight), ofGetWidth() - 200, ofGetHeight() - 120);
         
         float currentScale = model.getScale().x;
         float lengthRatio = (currentScale) / 50;
@@ -1178,8 +1198,10 @@ void ofApp::save() {
         textFile.open(saveFileResult.getPath(), ofFile::WriteOnly);
         if(currentModelURL.compare("")==0)
             textFile << "no modeling" << endl;
-        else
+        else {
             textFile << currentModelURL << endl;
+            textFile << model.getScale().x << endl;
+        }
         for(int i=0; i<projectors.size(); i++) {
             if(projectors[i]->isSetted) {
                 textFile << i << ',';
@@ -1210,6 +1232,7 @@ void ofApp::save() {
 }
 
 void ofApp::load() {
+    int itr = 0;
     ofFile textFile;
     ofBuffer buffer;
     vector<string> saveList;
@@ -1221,13 +1244,19 @@ void ofApp::load() {
         for(auto line : buffer.getLines())
             saveList.push_back(line);
         
-        if(saveList[0].compare("no modeling") != 0)
-            open3DFile(saveList[0]);
+        itr++;
         
-        for(int i=1; i<saveList.size()-1; i++) {
+        if(saveList[0].compare("no modeling") != 0) {
+            open3DFile(saveList[0]);
+            model.setScale(stof(saveList[1]), stof(saveList[1]), stof(saveList[1]));
+            reconstructMesh();
+            itr++;
+        }
+        
+        for(int i=itr; i<saveList.size()-1; i++) {
             str = ofSplitString(saveList[i], ",")[0];
             int index = stoi(str);
-            ofLog() << str;
+            //ofLog() << str;
             projectors[index]->isSetted = true;
             
             str = ofSplitString(saveList[i], ",")[1];
@@ -1310,7 +1339,7 @@ int ofApp::findNearProjectorIndex(ofPoint mousePt) {
     if(model.getMeshCount()!=0) {
         ofVec3f modelPt = easyCam.worldToScreen(model.getPosition());
         float distance = modelPt.distance(mousePt);
-        if(distance < 100) {
+        if(distance < 75) {
             isModelingSelected *= -1;
             return nearestIndex;
         }
@@ -1462,7 +1491,6 @@ void ofApp::cameraClickEventCheck(int x, int y, int button) {
     }
     else if(y > ofGetHeight()/2 && y <= (ofGetHeight()/2 + cameraMenu.getHeight()/3*2)) {
         if(x > 23 && x <= 23 + cameraMenu.getWidth()/2) {
-            isTranslateMode = !isTranslateMode;
             isCameraMenuClicked = true;
         }
     }
@@ -1870,6 +1898,13 @@ void ofApp::objectClickEventCheck(int x, int y, int button) {
         else {
             isProjectorDropDownOn = false;
             isGridDropDownOn = true;
+            if(isModelingSelected == 1) {
+                if(currentSelectedProjector != -1)
+                    projectors[currentSelectedProjector]->isSelected = false;
+                currentSelectedProjector = -1;
+                mappingGUI->projector = NULL;
+                isGridDropDownOn = false;
+            }
         }
     }
 }

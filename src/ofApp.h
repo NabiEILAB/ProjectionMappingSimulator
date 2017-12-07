@@ -84,7 +84,6 @@ class ofApp : public ofBaseApp{
         int cameraButtonPressedIndex;
         int currentCameraModeIndex;
         int cameraModeHoverIndex;
-        bool isTranslateMode;
         bool isCameraMenuClicked;
     
         ofImage headerMenu[2];
