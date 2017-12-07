@@ -1,8 +1,8 @@
 # Projection Mapping Simulator
 
-<br>Platform : Mac OS
+<br>Platform : Mac OS, Windows
 <br>Language : C++
-<br>IDE : Xcode
+<br>IDE : Xcode, Visual Studio 2015
 <br>External Library : openFrameworks (http://openframeworks.cc/)
 <br>Compile Environment : 64 bit release mode
 <br>실행하면 3차원 그리드가 그려진 3차원 공간을 둘러볼 수 있다.
