@@ -7,4 +7,4 @@
 <br>Compile Environment : 64 bit release mode
 
 <br>사용법 및 자세한 설명은 본 프로젝트의 위키 참조 (https://github.com/NabiEILAB/ProjectionMappingSimulator/wiki)
-<br><img src="wiki/home/homeScreenshot1.png"></img></br>
+<br><img src="wiki/home/screenshot01.png"></img></br>
