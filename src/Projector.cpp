@@ -76,6 +76,10 @@ void Projector::update() {
         return ;
     
     videoPlayer.update();
+    if(videoPlayer.getIsMovieDone()) {
+        videoPlayer.setFrame(0);
+        videoPlayer.play();
+    }
     copiedTexture.allocate(videoPlayer.getPixels());
 }
 
@@ -239,6 +243,7 @@ void Projector::deactivate() {
     
     manufacturerName = "";
     modelName = "";
+    //videoPlayer.closeMovie();
     videoPlayer.close();
     
     if(shadowFbo.isAllocated())

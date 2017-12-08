@@ -60,8 +60,11 @@ void MappingApp::setup() {
 }
 
 void MappingApp::update() {
-    if(projector == NULL)
+    if(projector == NULL) {
+        if(texture.isAllocated())
+            texture.clear();
         return ;
+    }
     
     if(projector->videoPlayer.isLoaded())
         texture.allocate(projector->videoPlayer.getPixels());

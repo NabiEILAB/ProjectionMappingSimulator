@@ -848,8 +848,12 @@ void ofApp::openVideoFile(ofFileDialogResult openFileResult) {
         string fileExtension = ofToUpper(file.getExtension());
         
         if(fileExtension == "MOV" || fileExtension == "MP4" || fileExtension == "AVI") {
+            projectors[currentSelectedProjector]->videoPlayer.stop();
+            projectors[currentSelectedProjector]->videoPlayer.close();
             projectors[currentSelectedProjector]->videoPlayer.load(openFileResult.getPath());
             projectors[currentSelectedProjector]->videoPlayer.play();
+            
+            
             projectors[currentSelectedProjector]->currentVideoURL = openFileResult.getPath();
             mappingGUI->setProjector(projectors[currentSelectedProjector]);
         }
@@ -1239,6 +1243,7 @@ void ofApp::load() {
     string str;
     ofFileDialogResult loadFileResult = ofSystemLoadDialog("load file");
     if(loadFileResult.bSuccess) {
+        clearProject();
         textFile.open(loadFileResult.getPath(), ofFile::ReadOnly);
         buffer = textFile.readToBuffer();
         for(auto line : buffer.getLines())

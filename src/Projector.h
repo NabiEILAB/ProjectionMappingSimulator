@@ -42,8 +42,9 @@ public :
     float width,height;
     float pivotWidth, pivotHeight, pivotDistance;
     
-    ofVideoPlayer videoPlayer;
-    
+    //ofVideoPlayer videoPlayer;
+    ofAVFoundationPlayer videoPlayer;
+
     //Used with mappingApp
     ofTexture copiedTexture;
     ofPoint pt[4];
