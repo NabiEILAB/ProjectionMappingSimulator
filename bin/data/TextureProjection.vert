@@ -30,9 +30,11 @@ void setProjector() {
     projectorPosVarying = projectorPos;
     pixelPositionVarying = vec3(modelMatrix * position);
     
-    vec3 L = projectorPos - position.xyz;
+    /*vec3 L = projectorPos - position.xyz;
     vec3 V = -position.xyz;
-    halfVector = normalize(L+V);
+    halfVector = normalize(L+V);*/
+    
+    halfVector = vec3(0, 0, 0); //halfVector worsen fade-out lighting... curious...
 }
 
 void main() {
