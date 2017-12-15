@@ -4,6 +4,7 @@
 //Shared variables
 out vec4 fragColor;
 in vec3 normalVarying;
+in vec3 pixelPositionVarying;
 
 //projector's variables
 uniform sampler2D shadowTex;
@@ -11,8 +12,8 @@ uniform sampler2DRect projectorTex;
 in vec4 projTextCoord;
 in vec4 shadowTextCoord;
 in vec3 projectorDirVarying;
+in vec3 projectorPosVarying;
 in vec3 halfVector;
-in float distVarying;
 uniform float radius;
 void drawProjector() {
     vec3 n,halfV;
@@ -24,13 +25,15 @@ void drawProjector() {
     vec4 specularLight = vec4(1.0, 1.0, 1.0, 1.0);
     vec4 lightColor = vec4(1.0, 1.0, 1.0, 1.0);
     
+    float dist = distance(pixelPositionVarying, projectorPosVarying);
+    
     NdotL = max(dot(normalVarying, projectorDirVarying), 0.0);
     if(NdotL > 0.0) {
         if(NdotL < 1.0)
             NdotL = 1.0;
         
-        att = 2.0 / (1.0 + (2.0 / radius * distVarying) + (1.0 / (radius * radius)) * (distVarying * distVarying));
-        att -= 1.0 / (1.0 + (2.0 / radius * (1500.0 - distVarying)) + (1.0 / (radius * radius)) * ((1500.0 - distVarying) * (1500.0 - distVarying)));
+        att = 2.0 / (1.0 + (2.0 / radius * dist) + (1.0 / (radius * radius)) * (dist * dist));
+        att -= 1.0 / (1.0 + (2.0 / radius * (1500.0 - dist)) + (1.0 / (radius * radius)) * ((1500.0 - dist) * (1500.0 - dist)));
         
         lightColor += att * vec4(diffuseLight * NdotL * ambientLight, 1.0);
         halfV = normalize(halfVector);
@@ -38,6 +41,7 @@ void drawProjector() {
         float shineness = 1;
         lightColor += att * specularLight * pow(NdotHV, shineness);
         
+
         vec4 projTexColor;
         vec3 tex_coords = shadowTextCoord.xyz / shadowTextCoord.w;
         
