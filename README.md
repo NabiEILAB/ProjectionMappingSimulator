@@ -6,5 +6,5 @@
 <br>External Library : openFrameworks (Crucial requirement, Link : http://openframeworks.cc/)
 <br>Compile Environment : 64 bit release mode
 
-<br>More info about program in this projector's wiki (https://github.com/NabiEILAB/ProjectionMappingSimulator/wiki)
+<br>More info about program in this project's wiki (https://github.com/NabiEILAB/ProjectionMappingSimulator/wiki)
 <br><img src="wiki/home/screenshot01.png"></img></br>
