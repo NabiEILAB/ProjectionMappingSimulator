@@ -282,10 +282,18 @@ void ofApp::deleteProjector(int projectorNum) {
 void ofApp::settingCameraPosition() {
     if(cameraButtonPressedIndex==0) { //ZOOM IN
         //easyCam.disableMouseInput();
+        float x = easyCam.getTarget().getX() + easyCam.getLookAtDir().x * 10;
+        float y = easyCam.getTarget().getY() + easyCam.getLookAtDir().y * 10;
+        float z = easyCam.getTarget().getZ() + easyCam.getLookAtDir().z * 10;
+        easyCam.setTarget(ofVec3f(x,y,z));
         easyCam.dolly(-10);
     }
     else if(cameraButtonPressedIndex==1) { //ZOOM OUT
         //easyCam.disableMouseInput();
+        float x = easyCam.getTarget().getX() - easyCam.getLookAtDir().x * 10;
+        float y = easyCam.getTarget().getY() - easyCam.getLookAtDir().y * 10;
+        float z = easyCam.getTarget().getZ() - easyCam.getLookAtDir().z * 10;
+        easyCam.setTarget(ofVec3f(x,y,z));
         easyCam.dolly(10);
     }
     else if(cameraButtonPressedIndex==2) { //MOVE LEFT & ROTATE LEFT & ORBIT LEFT
